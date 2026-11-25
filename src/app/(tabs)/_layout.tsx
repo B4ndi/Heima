@@ -1,41 +1,46 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs, router } from 'expo-router';
-import type { ComponentProps } from 'react';
-import type { ColorValue } from 'react-native';
+import { Tabs } from 'expo-router';
+import { useColorScheme, type ColorValue } from 'react-native';
 
-import { IconButton, useColors } from '@/components/ui';
-import { nb } from '@/i18n/nb';
-import { useHousehold } from '@/providers/HouseholdProvider';
+import { useColors, type IconName } from '@/components/ui';
+import { FeatureColors, type Feature } from '@/constants/theme';
+import { t } from '@/i18n';
 
-type IconName = ComponentProps<typeof Ionicons>['name'];
+const TABS: { name: string; feature: Feature; title: string; icon: IconName; iconActive: IconName }[] = [
+  { name: 'index', feature: 'home', title: t.tabs.home, icon: 'home-outline', iconActive: 'home' },
+  { name: 'oppslag', feature: 'board', title: t.tabs.board, icon: 'chatbubbles-outline', iconActive: 'chatbubbles' },
+  { name: 'avstemninger', feature: 'polls', title: t.tabs.polls, icon: 'stats-chart-outline', iconActive: 'stats-chart' },
+  { name: 'handleliste', feature: 'shopping', title: t.tabs.shopping, icon: 'cart-outline', iconActive: 'cart' },
+  { name: 'kalender', feature: 'calendar', title: t.tabs.calendar, icon: 'calendar-outline', iconActive: 'calendar' },
+  { name: 'vaskeliste', feature: 'chores', title: t.tabs.chores, icon: 'sparkles-outline', iconActive: 'sparkles' },
+];
 
 export default function TabsLayout() {
   const c = useColors();
-  const { active } = useHousehold();
-
-  const tab = (title: string, icon: IconName) => ({
-    title,
-    tabBarLabel: title,
-    tabBarIcon: ({ color, size }: { color: ColorValue; size: number }) => <Ionicons name={icon} color={color as string} size={size} />,
-  });
+  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
 
   return (
     <Tabs
       screenOptions={{
-        headerTitle: active?.households.name ?? nb.appName,
-        headerRight: () => (
-          <IconButton icon="settings-outline" label={nb.settings.title} onPress={() => router.push('/innstillinger')} />
-        ),
-        headerRightContainerStyle: { paddingRight: 16 },
-        tabBarActiveTintColor: c.primary,
+        headerShown: false, // each tab draws its own coloured header
         tabBarInactiveTintColor: c.textSecondary,
+        tabBarStyle: { backgroundColor: c.card, borderTopWidth: 0, elevation: 0 },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
         sceneStyle: { backgroundColor: c.background },
       }}>
-      <Tabs.Screen name="index" options={tab(nb.tabs.board, 'chatbubbles-outline')} />
-      <Tabs.Screen name="avstemninger" options={tab(nb.tabs.polls, 'stats-chart-outline')} />
-      <Tabs.Screen name="handleliste" options={tab(nb.tabs.shopping, 'cart-outline')} />
-      <Tabs.Screen name="kalender" options={tab(nb.tabs.calendar, 'calendar-outline')} />
-      <Tabs.Screen name="vaskeliste" options={tab(nb.tabs.chores, 'checkbox-outline')} />
+      {TABS.map((tab) => (
+        <Tabs.Screen
+          key={tab.name}
+          name={tab.name}
+          options={{
+            title: tab.title,
+            tabBarActiveTintColor: FeatureColors[scheme][tab.feature].fg,
+            tabBarIcon: ({ color, size, focused }: { color: ColorValue; size: number; focused: boolean }) => (
+              <Ionicons name={focused ? tab.iconActive : tab.icon} color={color as string} size={size - 2} />
+            ),
+          }}
+        />
+      ))}
     </Tabs>
   );
 }

@@ -36,7 +36,14 @@ async function signIn(page, email) {
   await page.getByRole('button', { name: 'Logg inn', exact: true }).click();
 }
 
-const shot = async (page, name) => SHOTS && page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
+const shot = async (page, name) => {
+  // every screen we capture must fit a 390 px phone without sideways scrolling
+  const overflow = await page.evaluate(() =>
+    Math.max(...[...document.querySelectorAll('*')].map((el) => el.getBoundingClientRect().right)) - window.innerWidth,
+  );
+  if (overflow > 1) throw new Error(`FAIL: ${name} overflows horizontally by ${Math.round(overflow)}px`);
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
+};
 const check = (cond, msg) => {
   if (!cond) throw new Error(`FAIL: ${msg}`);
   console.log(`ok - ${msg}`);
@@ -44,28 +51,41 @@ const check = (cond, msg) => {
 
 const browser = await chromium.launch();
 const viewport = { width: 390, height: 844 };
-const anne = await (await browser.newContext({ viewport })).newPage();
-const bjorn = await (await browser.newContext({ viewport })).newPage();
+const locale = 'nb-NO'; // the app follows the device language
+const anne = await (await browser.newContext({ viewport, locale })).newPage();
+const bjorn = await (await browser.newContext({ viewport, locale })).newPage();
 for (const p of [anne, bjorn]) p.on('pageerror', (e) => console.log('pageerror:', e.message));
 
 try {
-  // --- Anne: sign up, create household
+  // Visited tabs stay mounted (just hidden), so after switching we wait for the
+  // URL to change instead of trusting that some text is on screen.
+  const PATHS = { Hjem: '/', Oppslag: '/oppslag', Avstemning: '/avstemninger', Handleliste: '/handleliste', Kalender: '/kalender', Vaskeliste: '/vaskeliste' };
+  const tab = async (page, name) => {
+    const byRole = page.getByRole('tab', { name, exact: false });
+    if (await byRole.count()) await byRole.first().click();
+    else await page.getByRole('link', { name }).last().click();
+    await page.waitForURL((u) => new URL(u).pathname === PATHS[name]);
+  };
+  const visible = (loc) => loc.filter({ visible: true }).first();
+
+  // --- Anne: sign up, create household -> lands on Home
   await signIn(anne, `anne-${run}@heima.test`);
-  await anne.getByText('Opprett en husstand').waitFor();
+  await visible(anne.getByText('Opprett en husstand')).waitFor();
   await anne.getByPlaceholder('Visningsnavn').fill('Anne');
   await anne.getByPlaceholder('F.eks.').fill('Kollektivet Testgata 1');
   await anne.getByRole('button', { name: 'Opprett', exact: true }).click();
-  await anne.getByText('Kollektivet Testgata 1').first().waitFor();
-  check(true, 'Anne created a household');
+  await visible(anne.getByText('Hei, Anne!')).waitFor();
+  check(true, 'Anne created a household and sees Home');
+  await shot(anne, '00-home-empty');
 
-  // --- Anne: create invite in settings
-  await anne.getByLabel('Innstillinger', { exact: true }).click();
+  // --- Anne: create invite in settings (opened from her avatar)
+  await visible(anne.getByLabel('Innstillinger', { exact: true })).click();
   await anne.getByRole('button', { name: 'Inviter beboer', exact: true }).last().click();
   const codeEl = anne.getByText(/^[A-HJ-NP-Z2-9]{5}-[A-HJ-NP-Z2-9]{5}$/);
   await codeEl.waitFor();
   const code = (await codeEl.textContent()).trim();
-  check(/^[A-HJ-NP-Z2-9]{5}-[A-HJ-NP-Z2-9]{5}$/.test(code), `invite code shown once (${code.slice(0, 2)}…)`);
-  await shot(anne, '01-settings-invite');
+  check(true, `invite code shown once (${code.slice(0, 2)}…)`);
+  await shot(anne, '01-settings');
   await anne.goBack();
 
   // --- Bjørn: sign up, preview + confirm join
@@ -73,71 +93,92 @@ try {
   await bjorn.getByPlaceholder('Visningsnavn').fill('Bjørn');
   await bjorn.getByPlaceholder('XXXXX-XXXXX').fill(code.toLowerCase());
   await bjorn.getByRole('button', { name: 'Fortsett', exact: true }).click();
-  await bjorn.getByText('Vil du bli med i «Kollektivet Testgata 1»?').waitFor();
-  check(true, 'Bjørn sees household name before joining');
-  await shot(bjorn, '02-join-confirm');
+  await visible(bjorn.getByText('Vil du bli med i «Kollektivet Testgata 1»?')).waitFor();
   await bjorn.getByRole('button', { name: 'Bli med', exact: true }).click();
-  await bjorn.getByText('Kollektivet Testgata 1').first().waitFor();
+  await visible(bjorn.getByText('Hei, Bjørn!')).waitFor();
   check(true, 'Bjørn joined');
 
-  // --- Oppslag: Anne posts, Bjørn sees it via realtime
+  // --- Oppslag: Anne posts, Bjørn reacts, Anne edits
+  await tab(anne, 'Oppslag');
   await anne.getByPlaceholder('Skriv et oppslag').fill('Husmøte søndag kl. 18!');
   await anne.getByRole('button', { name: 'Publiser', exact: true }).click();
-  await bjorn.getByText('Husmøte søndag kl. 18!').waitFor({ timeout: 10000 });
+  await tab(bjorn, 'Oppslag');
+  await visible(bjorn.getByText('Husmøte søndag kl. 18!')).waitFor({ timeout: 10000 });
   check(true, 'post appears for Bjørn (realtime)');
-  await shot(bjorn, '03-board');
+  await bjorn.getByRole('button', { name: 'Reager', exact: true }).first().click();
+  await bjorn.getByRole('button', { name: '❤️', exact: true }).click();
+  await anne.getByRole('button', { name: /^❤️ 1\./ }).waitFor({ timeout: 10000 });
+  check(true, 'reaction shows up for Anne (realtime)');
+  await anne.getByRole('button', { name: 'Rediger', exact: true }).last().click(); // last = the active tab's
+  await anne.getByLabel('Rediger oppslag', { exact: true }).fill('Husmøte søndag kl. 19!');
+  await anne.getByRole('button', { name: 'Lagre', exact: true }).click();
+  await visible(bjorn.getByText('Husmøte søndag kl. 19!')).waitFor({ timeout: 10000 });
+  check(true, 'edited post updates for Bjørn');
+  await anne.goBack();
+  await shot(bjorn, '02-board');
 
   // --- Handleliste
-  await bjorn.getByRole('tab', { name: /Handleliste/ }).click().catch(() => bjorn.getByText('Handleliste').last().click());
+  await tab(bjorn, 'Handleliste');
+  await bjorn.getByRole('button', { name: '+ Ny liste', exact: true }).click();
   await bjorn.getByPlaceholder('Navn på liste').fill('Ukeshandel');
-  await bjorn.getByRole('button', { name: 'Ny liste', exact: true }).click();
+  await bjorn.getByRole('button', { name: 'Opprett', exact: true }).click();
   await bjorn.getByPlaceholder('Legg til vare').fill('Havremelk');
   await bjorn.getByRole('button', { name: 'Legg til', exact: true }).click();
-  await bjorn.getByText('Havremelk').waitFor();
-  await anne.getByText('Handleliste').last().click();
-  await anne.getByText('Havremelk').waitFor({ timeout: 10000 });
-  await anne.getByRole('checkbox').first().click();
-  await bjorn.getByText('Kjøpt av Anne').waitFor({ timeout: 10000 });
+  await bjorn.getByRole('checkbox', { name: 'Havremelk' }).waitFor();
+  await tab(anne, 'Handleliste');
+  await anne.getByRole('checkbox', { name: 'Havremelk' }).click({ timeout: 10000 });
+  await visible(bjorn.getByText('Kjøpt av Anne')).waitFor({ timeout: 10000 });
   check(true, 'shopping item shared and ticked off (realtime)');
-  await shot(bjorn, '04-shopping');
+  await shot(bjorn, '03-shopping');
 
   // --- Avstemning (anonymous)
-  await anne.getByText('Avstemninger').last().click();
+  await tab(anne, 'Avstemning');
   await anne.getByRole('button', { name: 'Ny avstemning', exact: true }).click();
   await anne.getByLabel('Spørsmål', { exact: true }).fill('Skal vi kjøpe ny sofa?');
   await anne.getByLabel('Alternativ 1', { exact: true }).fill('Ja');
   await anne.getByLabel('Alternativ 2', { exact: true }).fill('Nei');
   await anne.getByRole('switch', { name: 'Anonym avstemning' }).click();
   await anne.getByRole('button', { name: 'Opprett', exact: true }).click();
-  await bjorn.getByText('Avstemninger').last().click();
-  await bjorn.getByText('Skal vi kjøpe ny sofa?').waitFor({ timeout: 10000 });
-  await bjorn.getByRole('radio', { name: /Ja/ }).click();
+  await tab(bjorn, 'Avstemning');
+  await visible(bjorn.getByText('Skal vi kjøpe ny sofa?')).waitFor({ timeout: 10000 });
+  await bjorn.getByRole('radio', { name: 'Ja' }).click();
   await bjorn.getByRole('button', { name: 'Stem', exact: true }).click();
-  await anne.getByText('1 stemme · 100%').waitFor({ timeout: 10000 });
+  await visible(anne.getByText('100%')).waitFor({ timeout: 10000 });
   check(true, 'anonymous poll tallies update');
-  await shot(anne, '05-poll');
+  await shot(anne, '04-polls');
 
-  // --- Kalender
-  await anne.getByText('Kalender').last().click();
+  // --- Kalender: create, then edit
+  await tab(anne, 'Kalender');
   await anne.getByRole('button', { name: 'Ny hendelse', exact: true }).click();
   await anne.getByLabel('Tittel', { exact: true }).fill('Dugnad');
   await anne.getByRole('button', { name: 'Opprett', exact: true }).click();
-  await bjorn.getByText('Kalender').last().click();
-  await bjorn.getByText('Dugnad').waitFor({ timeout: 10000 });
-  check(true, 'calendar event shared');
-  await shot(bjorn, '06-calendar');
+  await tab(bjorn, 'Kalender');
+  await visible(bjorn.getByText('Dugnad')).waitFor({ timeout: 10000 });
+  await anne.getByRole('button', { name: 'Rediger', exact: true }).last().click(); // last = the active tab's
+  await anne.getByLabel('Tittel', { exact: true }).fill('Dugnad i hagen');
+  await anne.getByRole('button', { name: 'Lagre', exact: true }).click();
+  await visible(bjorn.getByText('Dugnad i hagen')).waitFor({ timeout: 10000 });
+  check(true, 'calendar event created and edited (month view)');
+  await shot(bjorn, '05-calendar');
 
   // --- Vaskeliste
-  await anne.getByText('Vaskeliste').last().click();
+  await tab(anne, 'Vaskeliste');
   await anne.getByRole('button', { name: 'Ny oppgave', exact: true }).click();
   await anne.getByLabel('Oppgave', { exact: true }).fill('Vaske bad');
   await anne.getByRole('button', { name: 'Opprett', exact: true }).click();
-  await anne.getByText('Din tur!').waitFor();
-  await anne.getByRole('button', { name: 'Ferdig', exact: true }).click();
-  await bjorn.getByText('Vaskeliste').last().click();
-  await bjorn.getByText('Din tur!').waitFor({ timeout: 10000 });
+  await visible(anne.getByText('Din tur!')).waitFor();
+  await anne.getByRole('button', { name: 'Ferdig', exact: true }).last().click();
+  await tab(bjorn, 'Vaskeliste');
+  await visible(bjorn.getByText('Din tur!')).waitFor({ timeout: 10000 });
   check(true, 'chore rotation advances to Bjørn');
-  await shot(bjorn, '07-chores');
+  await shot(bjorn, '06-chores');
+
+  // --- Home shows Bjørn's chore and the event
+  await tab(bjorn, 'Hjem');
+  await visible(bjorn.getByText('Vaske bad')).waitFor({ timeout: 10000 });
+  await visible(bjorn.getByText('Dugnad i hagen')).waitFor({ timeout: 10000 });
+  check(true, 'Home summarises chores and events');
+  await shot(bjorn, '07-home');
 
   // no horizontal overflow at phone width on any tab
   const overflow = await bjorn.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { Button, Card, ErrorText, Input, Screen, Txt } from '@/components/ui';
 import { createHousehold, updateDisplayName } from '@/features/households';
-import { nb } from '@/i18n/nb';
+import { t } from '@/i18n';
 import { userMessage } from '@/lib/errors';
 import { schemas } from '@/lib/validation';
 import { useAuth } from '@/providers/AuthProvider';
@@ -26,7 +26,7 @@ export function HouseholdSetup({ standalone = true }: { standalone?: boolean }) 
     if (!displayName.trim()) {
       const { data } = await supabase.from('profiles').select('display_name').eq('id', userId).single();
       if (data && data.display_name !== 'Ny beboer') return true;
-      setError(nb.onboarding.nameRequired);
+      setError(t.onboarding.nameRequired);
       return false;
     }
     await updateDisplayName(userId, displayName);
@@ -52,7 +52,7 @@ export function HouseholdSetup({ standalone = true }: { standalone?: boolean }) 
   async function join() {
     setError(null);
     const parsed = schemas.inviteCode.safeParse(code);
-    if (!parsed.success) return setError(nb.errors.invalidCode);
+    if (!parsed.success) return setError(t.errors.invalidCode);
     try {
       if (!(await saveName())) return;
     } catch (e) {
@@ -65,44 +65,44 @@ export function HouseholdSetup({ standalone = true }: { standalone?: boolean }) 
     <Screen edges={standalone ? ['top', 'bottom'] : ['bottom']}>
       {standalone ? (
         <Txt variant="title" style={{ marginTop: 32 }}>
-          {nb.onboarding.title}
+          {t.onboarding.title}
         </Txt>
       ) : null}
 
       {standalone ? (
         <Card>
-          <Txt variant="heading">{nb.onboarding.nameTitle}</Txt>
-          <Input value={displayName} onChangeText={setDisplayName} placeholder={nb.settings.displayName} maxLength={50} autoComplete="name" />
+          <Txt variant="heading">{t.onboarding.nameTitle}</Txt>
+          <Input value={displayName} onChangeText={setDisplayName} placeholder={t.settings.displayName} maxLength={50} autoComplete="name" />
         </Card>
       ) : null}
 
       {pending.length > 0 ? (
         <Card>
-          <Txt>{nb.onboarding.pending}</Txt>
-          <Button title={nb.common.retry} variant="secondary" onPress={refresh} />
+          <Txt>{t.onboarding.pending}</Txt>
+          <Button title={t.common.retry} variant="secondary" onPress={refresh} />
         </Card>
       ) : null}
 
       <Card>
-        <Txt variant="heading">{nb.onboarding.joinTitle}</Txt>
+        <Txt variant="heading">{t.onboarding.joinTitle}</Txt>
         <Input
           value={code}
           onChangeText={setCode}
-          placeholder={nb.onboarding.joinPlaceholder}
+          placeholder={t.onboarding.joinPlaceholder}
           autoCapitalize="characters"
           maxLength={13}
         />
-        <Button title={nb.onboarding.join} onPress={join} variant="secondary" />
+        <Button title={t.onboarding.join} onPress={join} variant="secondary" />
       </Card>
 
       <Card>
-        <Txt variant="heading">{nb.onboarding.createTitle}</Txt>
-        <Input value={name} onChangeText={setName} placeholder={nb.onboarding.createPlaceholder} maxLength={60} />
-        <Button title={nb.common.create} onPress={create} loading={busy} disabled={!name.trim()} />
+        <Txt variant="heading">{t.onboarding.createTitle}</Txt>
+        <Input value={name} onChangeText={setName} placeholder={t.onboarding.createPlaceholder} maxLength={60} />
+        <Button title={t.common.create} onPress={create} loading={busy} disabled={!name.trim()} />
       </Card>
 
       <ErrorText message={error} />
-      {standalone ? <Button title={nb.auth.signOut} variant="ghost" onPress={signOut} /> : null}
+      {standalone ? <Button title={t.auth.signOut} variant="ghost" onPress={signOut} /> : null}
     </Screen>
   );
 }

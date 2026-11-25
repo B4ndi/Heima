@@ -57,6 +57,15 @@
           "configureAndroidBackup": true,
           "faceIDPermission": false
         }
+      ],
+      "expo-localization",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Heima bruker bildene dine bare når du velger et profilbilde.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {

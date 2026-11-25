@@ -4,7 +4,9 @@ import { supabase } from '@/lib/supabase';
 import type { Comment, Post } from '@/lib/types';
 import { schemas } from '@/lib/validation';
 
-type PostWithCount = Post & { post_comments: { count: number }[] };
+export const REACTIONS = ['👍', '❤️', '😂', '🎉', '😮', '🙏'] as const;
+export type Reaction = { emoji: string; user_id: string };
+export type PostWithCount = Post & { post_comments: { count: number }[]; post_reactions: Reaction[] };
 
 export function usePosts(hh: string) {
   return useQuery({
@@ -12,7 +14,7 @@ export function usePosts(hh: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('posts')
-        .select('*, post_comments(count)')
+        .select('*, post_comments(count), post_reactions(emoji, user_id)')
         .eq('household_id', hh)
         .order('pinned', { ascending: false })
         .order('created_at', { ascending: false })
@@ -46,6 +48,23 @@ export function useBoardMutations(hh: string) {
     create: useMutation({
       mutationFn: async (body: string) => {
         const { error } = await supabase.from('posts').insert({ household_id: hh, body: schemas.postBody.parse(body) });
+        if (error) throw error;
+      },
+      onSuccess: invalidate,
+    }),
+    edit: useMutation({
+      mutationFn: async ({ id, body }: { id: string; body: string }) => {
+        const { error } = await supabase.from('posts').update({ body: schemas.postBody.parse(body) }).eq('id', id);
+        if (error) throw error;
+      },
+      onSuccess: invalidate,
+    }),
+    react: useMutation({
+      mutationFn: async ({ postId, emoji, mine }: { postId: string; emoji: string; mine: boolean }) => {
+        // Toggle: RLS only lets you insert/delete your own reaction.
+        const { error } = mine
+          ? await supabase.from('post_reactions').delete().eq('post_id', postId).eq('emoji', emoji)
+          : await supabase.from('post_reactions').insert({ post_id: postId, household_id: hh, emoji });
         if (error) throw error;
       },
       onSuccess: invalidate,

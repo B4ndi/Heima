@@ -5,17 +5,15 @@ import { supabase } from '@/lib/supabase';
 import type { CalendarEvent } from '@/lib/types';
 import { schemas } from '@/lib/validation';
 
-export function useEvents(hh: string) {
+/** Events overlapping [from, to). Without a range: upcoming events from today. */
+export function useEvents(hh: string, from?: Date, to?: Date) {
+  const start = from ?? startOfDay(new Date());
   return useQuery({
-    queryKey: ['events', hh],
+    queryKey: ['events', hh, start.toISOString(), to?.toISOString() ?? null],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('household_id', hh)
-        .gte('ends_at', startOfDay(new Date()).toISOString())
-        .order('starts_at')
-        .limit(200);
+      let q = supabase.from('events').select('*').eq('household_id', hh).gte('ends_at', start.toISOString());
+      if (to) q = q.lt('starts_at', to.toISOString());
+      const { data, error } = await q.order('starts_at').limit(300);
       if (error) throw error;
       return data as CalendarEvent[];
     },
@@ -34,18 +32,25 @@ export interface EventInput {
 export function useEventMutations(hh: string) {
   const qc = useQueryClient();
   const invalidate = () => qc.invalidateQueries({ queryKey: ['events', hh] });
+  const row = (e: EventInput) => ({
+    title: schemas.eventTitle.parse(e.title),
+    description: schemas.eventDescription.parse(e.description) || null,
+    location: schemas.eventLocation.parse(e.location) || null,
+    starts_at: e.starts_at.toISOString(),
+    ends_at: e.ends_at.toISOString(),
+    all_day: e.all_day,
+  });
   return {
     create: useMutation({
       mutationFn: async (e: EventInput) => {
-        const { error } = await supabase.from('events').insert({
-          household_id: hh,
-          title: schemas.eventTitle.parse(e.title),
-          description: schemas.eventDescription.parse(e.description) || null,
-          location: schemas.eventLocation.parse(e.location) || null,
-          starts_at: e.starts_at.toISOString(),
-          ends_at: e.ends_at.toISOString(),
-          all_day: e.all_day,
-        });
+        const { error } = await supabase.from('events').insert({ household_id: hh, ...row(e) });
+        if (error) throw error;
+      },
+      onSuccess: invalidate,
+    }),
+    update: useMutation({
+      mutationFn: async ({ id, ...e }: EventInput & { id: string }) => {
+        const { error } = await supabase.from('events').update(row(e)).eq('id', id);
         if (error) throw error;
       },
       onSuccess: invalidate,
@@ -58,4 +63,16 @@ export function useEventMutations(hh: string) {
       onSuccess: invalidate,
     }),
   };
+}
+
+export function useEvent(id: string | undefined) {
+  return useQuery({
+    queryKey: ['events', 'one', id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('events').select('*').eq('id', id!).single();
+      if (error) throw error;
+      return data as CalendarEvent;
+    },
+  });
 }

@@ -1,9 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 
-import { Button, ErrorText, Input, Screen, Toggle } from '@/components/ui';
+import { Button, Card, ErrorText, Input, Screen, Toggle } from '@/components/ui';
 import { usePollMutations } from '@/features/polls';
-import { nb } from '@/i18n/nb';
+import { t } from '@/i18n';
 import { userMessage } from '@/lib/errors';
 import { useHouseholdId } from '@/providers/HouseholdProvider';
 
@@ -18,7 +18,7 @@ export default function NewPoll() {
 
   async function submit() {
     setError(null);
-    if (options.filter((o) => o.trim()).length < 2) return setError(nb.polls.needOptions);
+    if (options.filter((o) => o.trim()).length < 2) return setError(t.polls.needOptions);
     try {
       await m.create.mutateAsync({ question, options, multiple, anonymous });
       router.back();
@@ -28,24 +28,30 @@ export default function NewPoll() {
   }
 
   return (
-    <Screen edges={['bottom']}>
-      <Input label={nb.polls.question} value={question} onChangeText={setQuestion} maxLength={300} multiline />
+    <Screen feature="polls" edges={['bottom']}>
+      <Card>
+        <Input label={t.polls.question} value={question} onChangeText={setQuestion} maxLength={300} multiline />
+      </Card>
+      <Card style={{ gap: 12 }}>
       {options.map((o, i) => (
         <Input
           key={i}
-          label={nb.polls.option(i + 1)}
+          label={t.polls.option(i + 1)}
           value={o}
           maxLength={100}
-          onChangeText={(t) => setOptions((prev) => prev.map((p, j) => (j === i ? t : p)))}
+          onChangeText={(v) => setOptions((prev) => prev.map((p, j) => (j === i ? v : p)))}
         />
       ))}
       {options.length < 10 ? (
-        <Button title={nb.polls.addOption} variant="secondary" icon="add" small onPress={() => setOptions((p) => [...p, ''])} />
+        <Button title={t.polls.addOption} variant="secondary" icon="add" small onPress={() => setOptions((p) => [...p, ''])} />
       ) : null}
-      <Toggle label={nb.polls.multiple} value={multiple} onChange={setMultiple} />
-      <Toggle label={nb.polls.anonymous} value={anonymous} onChange={setAnonymous} />
+      </Card>
+      <Card style={{ gap: 12 }}>
+        <Toggle label={t.polls.multiple} value={multiple} onChange={setMultiple} />
+        <Toggle label={t.polls.anonymous} value={anonymous} onChange={setAnonymous} />
+      </Card>
       <ErrorText message={error} />
-      <Button title={nb.common.create} onPress={submit} loading={m.create.isPending} disabled={!question.trim()} />
+      <Button title={t.common.create} onPress={submit} loading={m.create.isPending} disabled={!question.trim()} />
     </Screen>
   );
 }
