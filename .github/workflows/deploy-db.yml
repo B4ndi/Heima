@@ -33,9 +33,11 @@ jobs:
           persist-credentials: false
       - uses: supabase/setup-cli@689adcfb80d947100a1eab127289b97d1fb07b13 # v3.2.0
         with:
-          version: latest
+          version: 3.4.0   # pinned: deploys must not change behaviour on a CLI release
       - run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
-      - run: supabase db push --yes
-      - run: supabase functions deploy delete-account --project-ref "$SUPABASE_PROJECT_ID"
+      # CLI v3 targets the local stack unless --remote is given
+      - run: supabase db push --remote --yes
+      # deploys to the linked project; --use-api bundles server-side (no Docker)
+      - run: supabase functions deploy delete-account --use-api --yes
       - name: Advisors on the deployed project
         run: supabase db advisors --remote --level warn --fail-on error
