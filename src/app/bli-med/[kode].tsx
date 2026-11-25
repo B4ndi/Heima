@@ -9,7 +9,7 @@ import { formatCode, schemas } from '@/lib/validation';
 import { useHousehold } from '@/providers/HouseholdProvider';
 
 /**
- * Reached from an invite link (heima://bli-med/CODE or the universal link) or
+ * Reached from an invite link (heimvis://bli-med/CODE or the universal link) or
  * from the onboarding form. A link alone never joins anyone: the user always
  * sees which household it is and must confirm.
  */

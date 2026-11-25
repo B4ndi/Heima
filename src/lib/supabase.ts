@@ -7,14 +7,14 @@ import { secureSessionStorage } from './secureStorage';
 export const supabase = createClient(env.supabaseUrl, env.supabaseKey, {
   auth: {
     storage: secureSessionStorage,
-    storageKey: 'heima.auth',
+    storageKey: 'heimvis.auth',
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false, // sign-in uses OTP codes, never tokens in URLs
     flowType: 'pkce',
   },
   global: {
-    headers: { 'x-client-info': 'heima-app' },
+    headers: { 'x-client-info': 'heimvis-app' },
   },
 });
 

@@ -1,4 +1,6 @@
-# Heima: guide for Claude Code
+# Heimvis: guide for Claude Code
+
+(The repository and the Supabase projects are still named "heima"; the product is **Heimvis**.)
 
 Norwegian app for shared flats (bokollektiv). Expo (React Native, TypeScript strict) + Supabase (EU). Goal: App Store as soon as possible. The owner works in cybersecurity: **security and architecture are judged at professional level.**
 
