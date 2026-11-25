@@ -1,4 +1,3 @@
-import { isBefore, parseISO, startOfDay } from 'date-fns';
 import { router } from 'expo-router';
 import { View } from 'react-native';
 
@@ -7,7 +6,7 @@ import { MeButton } from '@/components/MeButton';
 import { AddButton, Button, Card, Empty, ErrorText, FeatureHeader, IconButton, Loading, Row, Screen, Txt, useFeatureColors } from '@/components/ui';
 import { choreAssignee, useChoreMutations, useChores } from '@/features/chores';
 import { t } from '@/i18n';
-import { fmt } from '@/lib/dates';
+import { fmt, todayIn } from '@/lib/dates';
 import { userMessage } from '@/lib/errors';
 import { useUserId } from '@/providers/AuthProvider';
 import { useHousehold, useHouseholdId } from '@/providers/HouseholdProvider';
@@ -16,7 +15,8 @@ export default function Chores() {
   const hh = useHouseholdId();
   const me = useUserId();
   const f = useFeatureColors('chores');
-  const { nameOf, isAdmin } = useHousehold();
+  const { nameOf, isAdmin, active } = useHousehold();
+  const today = todayIn(active?.households.timezone); // the database's "today" for chores
   const chores = useChores(hh);
   const m = useChoreMutations(hh);
 
@@ -45,7 +45,7 @@ export default function Chores() {
       {sorted.map((ch) => {
         const who = choreAssignee(ch);
         const mine = who === me;
-        const overdue = isBefore(parseISO(ch.next_due), startOfDay(new Date()));
+        const overdue = ch.next_due < today;
         return (
           <Card key={ch.id} tint={mine ? f.bg : undefined} style={{ gap: 12 }}>
             <Row style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>

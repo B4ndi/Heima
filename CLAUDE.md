@@ -15,7 +15,7 @@ Every new table:
 3. Ownership columns (`author_id`, `created_by`, `user_id`) `default auth.uid()` and are **not** in the INSERT grant; WITH CHECK repeats `= auth.uid()`.
 4. Column-level `grant insert (...)` / `grant update (...)`. Never grant identity columns, `role`, `status`, timestamps.
 5. Length/enum CHECK constraints on all text.
-6. Add the realtime trigger (`private.notify_household`); payloads stay notification-only.
+6. Add the realtime trigger (`private.notify_household`); payloads stay notification-only. Rows that not every member may know about (reports, blocks) use `private.notify_users` (per-user topic `user:<uuid>`) instead.
 7. Multi-row or rule-bearing writes are RPCs: `security definer`, `set search_path = ''`, explicit `private.require_uid()` / membership check, `revoke ... from public, anon`, `grant ... to authenticated`.
 8. A new pgTAP file in `supabase/tests/database/` covering cross-household isolation, spoofing and immutable columns. `001_schema_security.test.sql` enforces schema-wide invariants. Never weaken it.
 9. Schema changes only as new files in `supabase/migrations/`. Never edit a migration that has been deployed.

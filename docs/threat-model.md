@@ -10,6 +10,7 @@ Method: STRIDE per component and trust boundary. Baselines: OWASP MASVS L1 (app)
 | Membership & roles | Control who can read the household and moderate it |
 | Who voted what in anonymous polls | Social harm if revealed to housemates |
 | Invite codes | Grant access to a household |
+| Who reported what, and who blocked whom | Social harm in a small flat if revealed |
 | Session tokens (access + refresh) | Full account takeover |
 | E-mail addresses | Personal data (GDPR) |
 
@@ -46,12 +47,17 @@ The **database is the only place authorisation is decided**. Every request from 
 | T1 | Moving rows to another household / editing identity columns | DB | Column-level UPDATE grants exclude `household_id`, authors, `role`, timestamps | pgTAP 001 #8, 003 |
 | T2 | Child row attached to another household's parent | DB | Composite FKs `(parent_id, household_id)` | pgTAP 003 "composite FK" |
 | T5 | Abuse via reactions (spoofing, spam, free text) | DB | `user_id` = `auth.uid()` (not insertable), fixed 6-emoji allowlist, one row per user+emoji, own-only delete | pgTAP 004 |
+| T6 | Spoofed or misdirected reports (wrong reporter, wrong author, other household's content) | DB | Reports only via `report_content()`: reporter = `auth.uid()`, reported user derived from the content's author, membership checked; composite FKs tie the item to the report's household; fixed reason list, 500-char details, 20 reports/day/user | pgTAP 005 |
+| T7 | Moderation abuse (non-admin or other household resolves; reported admin dismisses own report) | DB | `resolve_report()` requires admin of the report's household and refuses the reported user; every resolution goes to `audit_log` | pgTAP 005 |
+| T8 | Wrong "today" for chores (UTC instead of local) | DB | `households.timezone` (validated against `pg_timezone_names`); `complete_chore` and new chores use the household's local date | pgTAP 006 (midnight/DST cases) |
 | T3 | Tampered chore rotation (non-members, index jumps) | DB | Trigger validates rotation ⊆ active members; `rotation_index` not client-writable | pgTAP 003 |
 | T4 | Malicious OTA update | App | EAS Update code signing | `docs/production.md` |
 | R1 | Admin abuses moderation without trace | DB | Append-only `audit_log` written only by SECURITY DEFINER code; admins can read | migration 0100 |
 | I1 | **IDOR: reading another household's data** | DB | RLS (enabled **and forced**) on every table via `private.is_member()`; anon has zero grants | pgTAP 001 #1–3, 003 (14 cross-household checks), curl abuse tests |
 | I2 | Revealing anonymous votes | DB/Realtime | RLS hides other users' rows in anonymous polls; tallies only via `poll_results()`; realtime sends **no row data** | pgTAP 003 "anonymous poll" |
 | I3 | Leaking data over Realtime | Realtime | Private channels; `realtime.messages` policy requires membership; payload = `{table, op, id}` only | pgTAP 003 realtime check |
+| I9 | Reports revealed to the reported user, other reporters or outsiders | DB | RLS: reporter sees own reports, admins see their household's reports **except those about themselves**; `reporter_id` not in the column grant (admins don't learn who reported); report creation is not audited (the audit log is admin-readable) | pgTAP 005 |
+| I10 | Blocked user learns they are blocked | DB/Realtime | `user_blocks` readable only by the blocker; blocks and reports ring a per-user realtime topic (`user:<uuid>`, only that user may subscribe), never the household channel | pgTAP 005 realtime checks |
 | I4 | Reading invite codes from DB/backups | DB | Only SHA-256 hash stored; hash column not selectable | pgTAP 001 #9, 002 |
 | I5 | Error messages leak schema | App | `userMessage()` maps DB errors to generic Norwegian messages | unit test `errors.test.ts` |
 | I6 | Secret key shipped in app | App/CI | `env.ts` refuses `sb_secret_`/service-role JWT at startup; gitleaks in CI; push protection | `src/lib/env.ts` |
@@ -64,11 +70,15 @@ The **database is the only place authorisation is decided**. Every request from 
 | E2 | Last admin leaves → ungoverned household | DB | RPCs refuse; account-deletion trigger promotes successor | pgTAP 002 |
 | E3 | `SECURITY DEFINER` search_path hijack | DB | Every definer function has `set search_path = ''` and qualified names | pgTAP 001 #5 (schema-wide invariant) |
 | E4 | Calling internal helpers via API | DB | Helpers in non-exposed `private` schema; EXECUTE revoked from PUBLIC globally | pgTAP 001 #4, #6; curl test 3 |
+| E7 | Blocking someone outside the household / on someone's behalf | DB | `blocker_id` = `auth.uid()` (not insertable); both ends are FKs to `household_members` (cascade when either leaves) | pgTAP 005 |
 | E5 | Ex-member keeps access | DB | Access is evaluated per query from `household_members`; removed from rotations | pgTAP 003 "ex-member loses access" |
 | E6 | Compromised CI action / dependency | CI | Actions pinned by SHA; `permissions: contents: read`; Dependabot; `npm audit`; CodeQL; prod deploy needs environment approval | `.github/` |
 
 ## Accepted risks / out of scope
 
+- **Reports about the only admin** are visible to nobody in the household. The reporter is pointed to the support address (`src/constants/support.ts`). The developer does not see report contents (data minimisation); escalation is by email.
+- **Reporter identity can be guessed** in a small flat (timing, content). The database never reveals it; the UI says so plainly.
+- **Blocking is per household and one-way**: it hides the blocked person's posts and comments for the blocker. Shared logistics (chores, lists, events, polls) stay visible to both.
 - **No certificate pinning.** Pinning in an Expo app breaks on certificate rotation by the hosting provider and needs native config. TLS + platform trust store covers MASVS L1. Revisit for L2.
 - **Root/jailbreak detection**: not required at L1; a compromised OS defeats Keychain anyway.
 - **Insider at Supabase / DB superuser**: can read everything. Mitigated contractually (DPA) and by EU hosting; end-to-end encryption is out of scope for v1.

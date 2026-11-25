@@ -8,7 +8,7 @@ const SECTIONS: [string, string][] = [
   ],
   [
     'Hvilke opplysninger lagrer vi?',
-    'E-postadresse (for innlogging), visningsnavn, eventuelt profilbilde, og innholdet du selv legger inn i husstanden: oppslag, kommentarer, stemmer, handlelister, hendelser og oppgaver. Vi lagrer ikke passord, posisjon, kontakter eller annen informasjon fra telefonen.',
+    'E-postadresse (for innlogging), visningsnavn, eventuelt profilbilde, og innholdet du selv legger inn i husstanden: oppslag, kommentarer, stemmer, handlelister, hendelser og oppgaver, samt rapporter du sender og hvem du har blokkert. Vi lagrer ikke passord, posisjon, kontakter eller annen informasjon fra telefonen.',
   ],
   [
     'Hvorfor?',
@@ -24,7 +24,7 @@ const SECTIONS: [string, string][] = [
   ],
   [
     'Hvor lenge?',
-    'Til du sletter kontoen. Avkryssede handlevarer og fullførte oppgaver slettes automatisk etter 12 måneder, logger etter 24 måneder.',
+    'Til du sletter kontoen. Avkryssede handlevarer, fullførte oppgaver og behandlede rapporter slettes automatisk etter 12 måneder, logger etter 24 måneder.',
   ],
   [
     'Dine rettigheter',

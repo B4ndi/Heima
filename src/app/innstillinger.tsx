@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { Alert, Share, View } from 'react-native';
 
 import { Avatar } from '@/components/Avatar';
-import { Button, Card, Chip, ErrorText, Input, Row, Screen, Toggle, Txt } from '@/components/ui';
+import { ActionSheet, Button, Card, Chip, ErrorText, Input, Row, Screen, Toggle, Txt } from '@/components/ui';
+import { supportMailto, SUPPORT_EMAIL } from '@/constants/support';
 import {
   deleteMyAccount,
   exportMyData,
@@ -15,8 +16,10 @@ import {
   useHouseholdAdmin,
   useInvites,
 } from '@/features/households';
+import { useBlocks, useModeration, useReports } from '@/features/moderation';
 import { t } from '@/i18n';
 import { fmt } from '@/lib/dates';
+import type { Report } from '@/lib/types';
 import { userMessage } from '@/lib/errors';
 import { useAuth, useUserId } from '@/providers/AuthProvider';
 import { useHousehold, useHouseholdId } from '@/providers/HouseholdProvider';
@@ -28,6 +31,11 @@ export default function Settings() {
   const { active, memberships, setActive, members, profiles, nameOf, isAdmin, refresh } = useHousehold();
   const admin = useHouseholdAdmin(hh);
   const invites = useInvites(hh, isAdmin);
+  const reports = useReports(hh, isAdmin);
+  const blocks = useBlocks(hh);
+  const mod = useModeration(hh);
+  const [timezone, setTimezone] = useState<string | null>(null); // null = untouched, show the saved value
+  const [removeTarget, setRemoveTarget] = useState<Report | null>(null);
   const [displayName, setDisplayName] = useState(profiles[me]?.display_name ?? '');
   const [requireApproval, setRequireApproval] = useState(false);
   const [newCode, setNewCode] = useState<string | null>(null);
@@ -48,6 +56,7 @@ export default function Settings() {
 
   const activeMembers = members.filter((m) => m.status === 'active');
   const pendingMembers = members.filter((m) => m.status === 'pending');
+  const isCurrentMember = (uid: string) => members.some((m) => m.user_id === uid);
   const others = memberships.filter((m) => m.status === 'active' && m.household_id !== hh);
 
   async function createInvite() {
@@ -127,8 +136,92 @@ export default function Settings() {
             </Row>
           </>
         ) : null}
+        {isAdmin ? (
+          <>
+            <Input
+              label={t.settings.timezone}
+              value={timezone ?? active?.households.timezone ?? ''}
+              onChangeText={setTimezone}
+              autoCapitalize="none"
+              maxLength={64}
+            />
+            <Txt variant="small">{t.settings.timezoneHelp}</Txt>
+            {timezone != null && timezone !== active?.households.timezone ? (
+              <Button
+                title={t.common.save}
+                small
+                variant="secondary"
+                onPress={() =>
+                  run(async () => {
+                    await admin.setTimezone.mutateAsync(timezone);
+                    setTimezone(null);
+                  }, t.settings.timezoneSaved)
+                }
+              />
+            ) : null}
+          </>
+        ) : (
+          <Txt variant="small">
+            {t.settings.timezone}: {active?.households.timezone}
+          </Txt>
+        )}
         <Button title={t.settings.newHousehold} small variant="ghost" onPress={() => router.push('/ny-husstand')} />
       </Card>
+
+      {/* ------------------------------------------------------- rapporter */}
+      {isAdmin ? (
+        <Card style={{ gap: 14 }}>
+          <Txt variant="heading">{t.settings.reports}</Txt>
+          {reports.error ? <ErrorText message={userMessage(reports.error)} /> : null}
+          {reports.data?.length === 0 ? <Txt variant="small">{t.settings.noReports}</Txt> : null}
+          {reports.data?.map((r) => {
+            const body = r.posts?.body ?? r.post_comments?.body;
+            return (
+              <View key={r.id} style={{ gap: 6 }}>
+                <Txt variant="small">
+                  <Txt variant="small" style={{ fontWeight: '600' }}>
+                    {t.moderation.reasons[r.reason]}
+                  </Txt>
+                  {' · '}
+                  {t.settings.reportAbout(r.post_id ? 'post' : 'comment', nameOf(r.reported_user_id))} · {fmt.relative(r.created_at)}
+                </Txt>
+                <Txt numberOfLines={6}>{body ?? t.settings.contentGone}</Txt>
+                {r.details ? <Txt variant="small">«{r.details}»</Txt> : null}
+                <Row style={{ flexWrap: 'wrap' }}>
+                  <Button small variant="secondary" title={t.settings.dismiss} onPress={() => run(() => mod.resolve.mutateAsync({ id: r.id, action: 'dismiss' }))} />
+                  <Button
+                    small
+                    variant="danger"
+                    title={t.settings.deleteContent}
+                    onPress={() => run(() => mod.resolve.mutateAsync({ id: r.id, action: 'delete_content' }))}
+                  />
+                  {isCurrentMember(r.reported_user_id) ? (
+                    <Button small variant="ghost" title={t.settings.removeMember} onPress={() => setRemoveTarget(r)} />
+                  ) : null}
+                </Row>
+              </View>
+            );
+          })}
+        </Card>
+      ) : null}
+      <ActionSheet
+        visible={!!removeTarget}
+        title={t.settings.removeMemberConfirm(nameOf(removeTarget?.reported_user_id))}
+        message={t.settings.removeMemberBody}
+        onClose={() => setRemoveTarget(null)}
+        actions={[
+          {
+            label: t.settings.removeMember,
+            icon: 'person-remove-outline',
+            destructive: true,
+            onPress: () => {
+              const r = removeTarget;
+              setRemoveTarget(null);
+              if (r) run(() => mod.resolve.mutateAsync({ id: r.id, action: 'remove_member' }));
+            },
+          },
+        ]}
+      />
 
       {/* --------------------------------------------------------- beboere */}
       <Card>
@@ -207,7 +300,43 @@ export default function Settings() {
         </Card>
       ) : null}
 
+      {/* ------------------------------------------------------ blokkerte */}
+      <Card>
+        <Txt variant="heading">{t.settings.blocked}</Txt>
+        {blocks.data?.length === 0 ? <Txt variant="small">{t.settings.noBlocked}</Txt> : null}
+        {blocks.data?.map((b) => (
+          <Row key={b.blocked_id} style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+            <Row>
+              <Avatar userId={b.blocked_id} size={32} />
+              <Txt>{nameOf(b.blocked_id)}</Txt>
+            </Row>
+            <Button
+              small
+              variant="ghost"
+              title={t.settings.unblockFor(nameOf(b.blocked_id))}
+              onPress={() => run(() => mod.unblock.mutateAsync(b.blocked_id))}
+            />
+          </Row>
+        ))}
+      </Card>
+
       <Button title={t.settings.leave} variant="secondary" onPress={leave} />
+
+      {/* ---------------------------------------------------------- hjelp */}
+      <Card>
+        <Txt variant="heading">{t.settings.support}</Txt>
+        <Txt variant="small">{t.settings.supportBody}</Txt>
+        <Button
+          title={t.settings.contactSupport}
+          small
+          variant="secondary"
+          icon="mail-outline"
+          onPress={() => Linking.openURL(supportMailto('Heimvis'))}
+        />
+        <Txt variant="small" selectable>
+          {SUPPORT_EMAIL}
+        </Txt>
+      </Card>
 
       {/* ------------------------------------------------------ personvern */}
       <Card>

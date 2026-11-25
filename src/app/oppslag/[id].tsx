@@ -3,8 +3,9 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { Avatar } from '@/components/Avatar';
+import { ContentMenu } from '@/components/ContentMenu';
 import { ReactionBar } from '@/components/ReactionBar';
-import { Button, Card, ErrorText, IconButton, Input, Loading, Row, Screen, Txt } from '@/components/ui';
+import { Button, Card, Empty, ErrorText, IconButton, Input, Loading, Row, Screen, Txt } from '@/components/ui';
 import { useBoardMutations, useComments, usePosts } from '@/features/board';
 import { t } from '@/i18n';
 import { fmt } from '@/lib/dates';
@@ -17,7 +18,8 @@ export default function PostDetail() {
   const hh = useHouseholdId();
   const me = useUserId();
   const { nameOf, isAdmin } = useHousehold();
-  const post = usePosts(hh).data?.find((p) => p.id === id);
+  const posts = usePosts(hh);
+  const post = posts.data?.find((p) => p.id === id);
   const comments = useComments(id);
   const m = useBoardMutations(hh);
   const [draft, setDraft] = useState('');
@@ -52,7 +54,16 @@ export default function PostDetail() {
     }
   }
 
-  if (!post) return <Loading />;
+  if (!post) {
+    // deleted, or its author was blocked while the screen was open
+    return posts.isLoading ? (
+      <Loading />
+    ) : (
+      <Screen feature="board" edges={['bottom']}>
+        <Empty icon="chatbubbles-outline" text={t.settings.contentGone} />
+      </Screen>
+    );
+  }
   const mine = post.author_id === me;
 
   return (
@@ -68,6 +79,7 @@ export default function PostDetail() {
             <Txt variant="small">{fmt.dateTime(post.created_at)}</Txt>
           </View>
           {mine && !editOpen ? <IconButton icon="create-outline" label={t.common.edit} size={20} onPress={() => setEditOpen(true)} /> : null}
+          {mine ? null : <ContentMenu kind="post" id={post.id} authorId={post.author_id} />}
         </Row>
 
         {editOpen && mine ? (
@@ -106,14 +118,17 @@ export default function PostDetail() {
                 </Txt>{' '}
                 · {fmt.relative(cm.created_at)}
               </Txt>
-              {cm.author_id === me || isAdmin ? (
-                <IconButton
-                  icon="trash-outline"
-                  label={t.common.delete}
-                  size={18}
-                  onPress={() => m.removeComment.mutate({ id: cm.id, postId: id })}
-                />
-              ) : null}
+              <Row style={{ gap: 12 }}>
+                {cm.author_id === me || isAdmin ? (
+                  <IconButton
+                    icon="trash-outline"
+                    label={t.common.delete}
+                    size={18}
+                    onPress={() => m.removeComment.mutate({ id: cm.id, postId: id })}
+                  />
+                ) : null}
+                {cm.author_id === me ? null : <ContentMenu kind="comment" id={cm.id} authorId={cm.author_id} />}
+              </Row>
             </Row>
             <Txt selectable>{cm.body}</Txt>
           </Card>

@@ -83,6 +83,16 @@ export function useHouseholdAdmin(hh: string) {
       },
       onSuccess: roster,
     }),
+    setTimezone: useMutation({
+      mutationFn: async (tz: string) => {
+        const { error } = await supabase.from('households').update({ timezone: schemas.timezone.parse(tz) }).eq('id', hh);
+        if (error) throw error;
+      },
+      onSuccess: () => {
+        roster();
+        qc.invalidateQueries({ queryKey: ['chores', hh] });
+      },
+    }),
   };
 }
 

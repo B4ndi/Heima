@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { isBefore, parseISO, startOfDay } from 'date-fns';
+import { parseISO } from 'date-fns';
 import { router, type Href } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
@@ -14,7 +14,7 @@ import { choreAssignee, useChoreMutations, useChores } from '@/features/chores';
 import { usePolls } from '@/features/polls';
 import { useOpenItemCount } from '@/features/shopping';
 import { t } from '@/i18n';
-import { fmt } from '@/lib/dates';
+import { fmt, todayIn } from '@/lib/dates';
 import { useUserId } from '@/providers/AuthProvider';
 import { useHousehold, useHouseholdId } from '@/providers/HouseholdProvider';
 
@@ -72,6 +72,7 @@ export default function Home() {
   const nextEvents = (events.data ?? []).slice(0, 3);
   const latest = (posts.data ?? []).slice(0, 2);
   const now = new Date();
+  const today = todayIn(active?.households.timezone);
   const myVotes = new Set((polls.data?.votes ?? []).filter((v) => v.user_id === me).map((v) => v.poll_id));
   const openPolls = (polls.data?.polls ?? []).filter(
     (p) => !p.closed_at && !(p.closes_at && new Date(p.closes_at) <= now) && !myVotes.has(p.id),
@@ -103,7 +104,7 @@ export default function Home() {
           <Txt variant="muted">{t.home.noChores}</Txt>
         ) : (
           myChores.map((ch) => {
-            const overdue = isBefore(parseISO(ch.next_due), startOfDay(now));
+            const overdue = ch.next_due < today;
             return (
               <Card key={ch.id} style={{ borderLeftWidth: 4, borderLeftColor: fChores.fg }}>
                 <Row style={{ justifyContent: 'space-between' }}>

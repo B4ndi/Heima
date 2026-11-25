@@ -48,6 +48,7 @@ function RootStack() {
         <Stack.Screen name="ny-avstemning" options={{ presentation: 'modal', title: t.polls.new }} />
         <Stack.Screen name="ny-hendelse" options={{ presentation: 'modal', title: t.calendar.new }} />
         <Stack.Screen name="ny-oppgave" options={{ presentation: 'modal', title: t.chores.new }} />
+        <Stack.Screen name="rapporter" options={{ presentation: 'modal', title: t.moderation.reportTitle }} />
         <Stack.Screen name="innstillinger" options={{ title: t.settings.title }} />
         <Stack.Screen name="ny-husstand" options={{ presentation: 'modal', title: t.settings.newHousehold }} />
       </Stack.Protected>

@@ -16,7 +16,7 @@ These are hard or impossible to change later.
 
 | # | Item | Why | Size |
 |---|---|---|---|
-| 1.1 | **Report and block** (posts and comments; block a housemate) | Apple guideline 1.2 for user-generated content | M (migration, RLS, tests, UI) |
+| 1.1 | ✅ **Report and block** (posts and comments; block a housemate) | Apple guideline 1.2 for user-generated content | M (migration, RLS, tests, UI) |
 | 1.2 | **App Review login** | Reviewers cannot read your inbox for the OTP | S–M |
 | 1.3 | **Website**: home, privacy, terms, support; `security.txt`; AASA/assetlinks | Apple needs privacy and support URLs; GDPR; ehandelsloven § 8 | M |
 | 1.4 | **Privacy policy completed**: controller, processors (Supabase, Resend, Expo, Sentry), transfer basis, age | GDPR art. 13 | S |
@@ -26,15 +26,19 @@ These are hard or impossible to change later.
 | 1.8 | **App Store assets**: icon, screenshots, description (nb/en), privacy labels, age rating | Store listing | M |
 | 1.9 | **TestFlight** round with real flatmates | Find bugs before review | — |
 
+Done: 1.1 (2026-11-25). Report reasons are a fixed list; admins see reports (not the reporter), except reports about themselves; support contact is `support@heimvis.no` in `src/constants/support.ts` (placeholder until the mailbox exists, see 1.3).
+
 ## 2. Cheap now, expensive later
 
 | # | Item | Why now |
 |---|---|---|
-| 2.1 | `households.timezone` (default `Europe/Oslo`); "today" for chores computed in it | The DB uses UTC today, so completing a chore just after midnight counts for the wrong day. Needed for reminders. |
+| 2.1 | ✅ `households.timezone` (default `Europe/Oslo`); "today" for chores computed in it | The DB uses UTC today, so completing a chore just after midnight counts for the wrong day. Needed for reminders. |
 | 2.2 | Separate environments: dev (local), staging (free Supabase org), prod (Supabase Pro) | Prod must never contain test data |
 | 2.3 | Crash reporting (Sentry, EU, no PII, `sendDefaultPii: false`) | Otherwise we're blind after launch |
 | 2.4 | `export_my_data` includes reactions and avatar path | GDPR art. 15 completeness |
 | 2.5 | Date and time pickers instead of typed `YYYY-MM-DD` | UX; affects every form |
+
+Done: 2.1 (2026-11-25). Admins change the zone in Settings; the app's "overdue" uses the same zone.
 
 ## 3. After launch / when needed
 
