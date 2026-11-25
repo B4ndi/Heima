@@ -1,0 +1,41 @@
+name: Deploy database
+
+# Schema changes reach production only through this workflow, never the
+# dashboard. The `production` environment must be configured with required
+# reviewers so every deploy needs an explicit approval.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Environment to deploy to
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-db-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target }}
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: supabase/setup-cli@689adcfb80d947100a1eab127289b97d1fb07b13 # v3.2.0
+        with:
+          version: latest
+      - run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      - run: supabase db push --yes
+      - run: supabase functions deploy delete-account --project-ref "$SUPABASE_PROJECT_ID"
+      - name: Advisors on the deployed project
+        run: supabase db advisors --remote --level warn --fail-on error

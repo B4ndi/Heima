@@ -103,8 +103,10 @@ select is((select checked from shopping_items where id = (select v from ids wher
           'B update of A item had no effect');
 select is((select title from events where id = (select v from ids where k = 'event')), 'Fest',
           'B update of A event had no effect');
-select is((select count(*)::int from chores), 1, 'B delete of A chore had no effect');
-select is((select count(*)::int from posts), 1, 'B delete of A post had no effect');
+select is((select count(*)::int from chores where id = (select v from ids where k = 'chore')), 1,
+          'B delete of A chore had no effect');
+select is((select count(*)::int from posts where id = (select v from ids where k = 'post')), 1,
+          'B delete of A post had no effect');
 
 -- ========================================================= member (Bjørn, A) --
 select pg_temp.as_user('b0000000-0000-0000-0000-00000000000b');
@@ -155,7 +157,8 @@ select throws_ok($$ update chores set rotation_index = 0 $$, '42501', null, 'rot
 select public.leave_household((select v from ids where k = 'hhA'));
 select is((select count(*)::int from posts), 0, 'ex-member loses access immediately');
 select pg_temp.as_admin();
-select is((select rotation from chores), array['a0000000-0000-0000-0000-00000000000a']::uuid[],
+select is((select rotation from chores where id = (select v from ids where k = 'chore')),
+          array['a0000000-0000-0000-0000-00000000000a']::uuid[],
           'ex-member removed from rotation');
 
 -- storage: cannot write into someone else's avatar folder

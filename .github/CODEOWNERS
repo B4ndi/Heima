@@ -1,0 +1,4 @@
+# Security-sensitive paths need owner review.
+/supabase/          @B4ndi
+/src/lib/           @B4ndi
+/.github/           @B4ndi
