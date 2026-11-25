@@ -14,6 +14,7 @@ jobs:
   analyze:
     runs-on: ubuntu-latest
     permissions:
+      actions: read          # required to upload results in private repositories
       contents: read
       security-events: write
     steps:
