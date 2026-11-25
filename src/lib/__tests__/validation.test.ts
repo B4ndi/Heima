@@ -33,3 +33,16 @@ describe('text limits mirror DB constraints', () => {
     expect(schemas.otp.safeParse('12ab').success).toBe(false);
   });
 });
+
+describe('moderation and time zone inputs', () => {
+  it('limits report details to 500 characters', () => {
+    expect(schemas.reportDetails.parse('  hei  ')).toBe('hei');
+    expect(schemas.reportDetails.safeParse('x'.repeat(501)).success).toBe(false);
+  });
+  it('accepts IANA zone names and rejects junk', () => {
+    expect(schemas.timezone.parse(' Europe/Oslo ')).toBe('Europe/Oslo');
+    expect(schemas.timezone.safeParse('America/Argentina/Buenos_Aires').success).toBe(true);
+    expect(schemas.timezone.safeParse("Europe/Oslo'; --").success).toBe(false);
+    expect(schemas.timezone.safeParse('').success).toBe(false);
+  });
+});

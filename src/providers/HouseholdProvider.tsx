@@ -45,7 +45,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('household_members')
-        .select('household_id, user_id, role, status, joined_at, households(id, name, created_at)')
+        .select('household_id, user_id, role, status, joined_at, households(id, name, created_at, timezone)')
         .eq('user_id', userId!)
         .order('joined_at');
       if (error) throw error;
@@ -118,6 +118,32 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
       supabase.removeChannel(channel);
     };
   }, [hh, qc]);
+
+  // Per-user doorbell ("user:<uuid>"): reports and blocks ring only the people
+  // allowed to see them, never the whole household.
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    const channel = supabase.channel(`user:${userId}`, { config: { private: true } });
+    (async () => {
+      await supabase.realtime.setAuth();
+      if (cancelled) return;
+      channel
+        .on('broadcast', { event: 'change' }, ({ payload }) => {
+          const table = (payload as { table?: string })?.table;
+          const keys: Record<string, string[][]> = {
+            content_reports: [['reports']],
+            user_blocks: [['blocks'], ['posts'], ['comments']],
+          };
+          for (const k of keys[table ?? ''] ?? []) qc.invalidateQueries({ queryKey: k });
+        })
+        .subscribe();
+    })();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [userId, qc]);
 
   const setActive = useCallback((id: string) => {
     setActiveId(id);

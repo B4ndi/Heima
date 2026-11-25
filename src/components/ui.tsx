@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { createContext, useContext, type ComponentProps, type ReactNode } from 'react';
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,6 +19,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Colors, FeatureColors, Radius, Shadow, Spacing, type Feature, type Palette } from '@/constants/theme';
+import { t } from '@/i18n';
 
 export type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -323,6 +325,60 @@ export function ErrorText({ message }: { message?: string | null }) {
   );
 }
 
+export interface SheetAction {
+  label: string;
+  icon?: IconName;
+  destructive?: boolean;
+  onPress: () => void;
+}
+
+/**
+ * Bottom sheet with a few actions and a cancel button. Used for "…" menus and
+ * confirmations (Alert.alert does nothing on web, so we don't rely on it).
+ */
+export function ActionSheet({
+  visible,
+  title,
+  message,
+  actions,
+  onClose,
+  error,
+}: {
+  visible: boolean;
+  title: string;
+  message?: string;
+  actions: SheetAction[];
+  onClose: () => void;
+  error?: string | null;
+}) {
+  const c = useColors();
+  const f = useFeature();
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.sheetWrap}>
+        <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.35)' }]} onPress={onClose} aria-hidden />
+        <View role="dialog" aria-label={title} style={[styles.sheet, { backgroundColor: c.card }]}>
+          <Txt variant="heading">{title}</Txt>
+          {message ? <Txt variant="muted">{message}</Txt> : null}
+          {actions.map((a) => (
+            <Pressable
+              key={a.label}
+              role="button"
+              aria-label={a.label}
+              onPress={a.onPress}
+              style={({ pressed }) => [styles.sheetAction, { backgroundColor: c.field, opacity: pressed ? 0.7 : 1 }]}>
+              {a.icon ? <Ionicons name={a.icon} size={20} color={a.destructive ? c.danger : f.fg} /> : null}
+              <Text style={{ color: a.destructive ? c.danger : c.text, fontSize: 16, fontWeight: '600', flexShrink: 1 }}>{a.label}</Text>
+            </Pressable>
+          ))}
+          <ErrorText message={error} />
+          <Button title={t.common.cancel} variant="ghost" onPress={onClose} />
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 export function Row({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   return <View style={[styles.row, style]}>{children}</View>;
 }
@@ -350,5 +406,17 @@ export const styles = StyleSheet.create({
   input: { borderRadius: Radius.sm, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16 },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   chip: { borderRadius: Radius.pill, paddingHorizontal: 14, paddingVertical: 8 },
+  sheetWrap: { flex: 1, justifyContent: 'flex-end' },
+  sheet: {
+    borderTopLeftRadius: Radius.lg,
+    borderTopRightRadius: Radius.lg,
+    padding: Spacing.xl,
+    paddingBottom: 36,
+    gap: Spacing.md,
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+  },
+  sheetAction: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: Radius.sm, padding: 14 },
   emptyIcon: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
 });

@@ -180,6 +180,92 @@ try {
   check(true, 'Home summarises chores and events');
   await shot(bjorn, '07-home');
 
+  // --- Report and block (App Store guideline 1.2)
+  const gone = async (page, text) => {
+    for (let i = 0; i < 40; i++) {
+      if ((await page.getByText(text).filter({ visible: true }).count()) === 0) return;
+      await page.waitForTimeout(250);
+    }
+    throw new Error(`FAIL: "${text}" still visible`);
+  };
+  // Hidden tabs stay mounted, so several copies of a header button exist; click the one on top.
+  const clickTop = async (loc) => {
+    for (const el of await loc.all()) {
+      try {
+        await el.click({ trial: true, timeout: 500 });
+        return el.click();
+      } catch {
+        // covered by another screen; try the next copy
+      }
+    }
+    throw new Error('FAIL: no clickable element');
+  };
+  const settings = async (page) => {
+    await clickTop(page.getByLabel('Innstillinger', { exact: true }));
+    await page.waitForURL((u) => new URL(u).pathname === '/innstillinger');
+  };
+  const report = async (page, author, reason, details) => {
+    await clickTop(page.getByRole('button', { name: `Flere valg: ${author}`, exact: true }));
+    await page.getByRole('button', { name: 'Rapporter', exact: true }).click();
+    await page.waitForURL((u) => new URL(u).pathname === '/rapporter');
+    await page.getByRole('button', { name: reason, exact: true }).click();
+    if (details) await page.getByLabel('Fortell mer (valgfritt)', { exact: true }).fill(details);
+    await page.getByRole('button', { name: 'Send rapport', exact: true }).click();
+    await visible(page.getByText('Takk! Rapporten er sendt')).waitFor();
+  };
+
+  await tab(bjorn, 'Oppslag');
+  await bjorn.getByPlaceholder('Skriv et oppslag').fill('Selger billige klokker!');
+  await bjorn.getByRole('button', { name: 'Publiser', exact: true }).click();
+  await tab(anne, 'Oppslag');
+  await visible(anne.getByText('Selger billige klokker!')).waitFor({ timeout: 10000 });
+  await report(anne, 'Bjørn', 'Spam', 'Reklame i oppslagene');
+  await shot(anne, '08-report');
+  await anne.getByRole('button', { name: 'Lukk', exact: true }).click();
+  check(true, 'Anne reported Bjørn\'s post');
+
+  // Bjørn reports Anne (the only admin): she must never see that report
+  await report(bjorn, 'Anne', 'Trakassering eller mobbing');
+  await bjorn.getByRole('button', { name: 'Lukk', exact: true }).click();
+  check(true, 'Bjørn reported Anne\'s post');
+
+  await settings(bjorn);
+  check((await bjorn.getByText('Rapportert innhold').filter({ visible: true }).count()) === 0, 'members do not see the reports view');
+  check(await bjorn.getByText('Tidssone: Europe/Oslo').filter({ visible: true }).count(), 'members see the household time zone');
+  check(await bjorn.getByRole('button', { name: 'Kontakt support', exact: true }).count(), 'support contact is in Settings');
+  await bjorn.goBack();
+
+  await settings(anne);
+  check((await anne.getByLabel('Tidssone', { exact: true }).inputValue()) === 'Europe/Oslo', 'admin sees the time zone (default Europe/Oslo)');
+  await visible(anne.getByText('«Reklame i oppslagene»')).waitFor({ timeout: 10000 });
+  check((await anne.getByText('Trakassering eller mobbing').filter({ visible: true }).count()) === 0,
+    'the reported admin does not see the report about herself');
+  await shot(anne, '09-reports-admin');
+  await anne.getByRole('button', { name: 'Slett innhold', exact: true }).click();
+  await visible(anne.getByText('Ingen åpne rapporter.')).waitFor({ timeout: 10000 });
+  await gone(bjorn, 'Selger billige klokker!');
+  check(true, 'admin deleted the reported post; gone for Bjørn too (realtime)');
+  await anne.goBack();
+
+  // Block: Anne stops seeing Bjørn's posts; Bjørn still sees them
+  await bjorn.getByPlaceholder('Skriv et oppslag').fill('Hei igjen fra Bjørn');
+  await bjorn.getByRole('button', { name: 'Publiser', exact: true }).click();
+  await visible(anne.getByText('Hei igjen fra Bjørn')).waitFor({ timeout: 10000 });
+  await clickTop(anne.getByRole('button', { name: 'Flere valg: Bjørn', exact: true }));
+  await anne.getByRole('button', { name: 'Blokker Bjørn', exact: true }).click();
+  await anne.getByRole('button', { name: 'Blokker', exact: true }).click();
+  await gone(anne, 'Hei igjen fra Bjørn');
+  await bjorn.waitForTimeout(500);
+  check(await bjorn.getByText('Hei igjen fra Bjørn').filter({ visible: true }).count(), 'blocked: hidden for Anne, still there for Bjørn');
+
+  await settings(anne);
+  await anne.getByRole('button', { name: 'Opphev blokkering av Bjørn', exact: true }).click();
+  await visible(anne.getByText('Du har ikke blokkert noen.')).waitFor({ timeout: 10000 });
+  await shot(anne, '10-unblocked');
+  await anne.goBack();
+  await visible(anne.getByText('Hei igjen fra Bjørn')).waitFor({ timeout: 10000 });
+  check(true, 'unblock from Settings shows the posts again');
+
   // no horizontal overflow at phone width on any tab
   const overflow = await bjorn.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   check(overflow <= 0, 'no horizontal overflow at 390px');

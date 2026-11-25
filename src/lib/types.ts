@@ -15,6 +15,8 @@ export interface Household {
   id: string;
   name: string;
   created_at: string;
+  /** IANA time zone; chore dates are computed in it. */
+  timezone: string;
 }
 
 export interface Member {
@@ -121,6 +123,29 @@ export interface Chore {
   next_due: string;
   archived: boolean;
   created_by: string | null;
+}
+
+export type ReportReason = 'harassment' | 'hate' | 'sexual' | 'violence' | 'spam' | 'other';
+export type ReportAction = 'dismiss' | 'delete_content' | 'remove_member';
+
+/** What an admin sees. reporter_id is deliberately not selectable. */
+export interface Report {
+  id: string;
+  household_id: string;
+  reported_user_id: string;
+  post_id: string | null;
+  comment_id: string | null;
+  reason: ReportReason;
+  details: string | null;
+  status: 'open' | 'resolved';
+  created_at: string;
+  posts: { body: string } | null;
+  post_comments: { body: string; post_id: string } | null;
+}
+
+export interface Block {
+  blocked_id: string;
+  created_at: string;
 }
 
 export type RpcResult =

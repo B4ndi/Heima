@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { Button, Card, Chip, ErrorText, Input, Loading, Screen, Txt } from '@/components/ui';
 import { useChore, useChoreMutations } from '@/features/chores';
 import { t } from '@/i18n';
-import { fmt } from '@/lib/dates';
+import { todayIn } from '@/lib/dates';
 import { userMessage } from '@/lib/errors';
 import type { Chore, Recurrence } from '@/lib/types';
 import { useHousehold, useHouseholdId } from '@/providers/HouseholdProvider';
@@ -22,13 +22,13 @@ export default function ChoreForm() {
 
 function Form({ existing }: { existing?: Chore }) {
   const hh = useHouseholdId();
-  const { members, nameOf } = useHousehold();
+  const { members, nameOf, active: household } = useHousehold();
   const active = members.filter((m) => m.status === 'active');
   const m = useChoreMutations(hh);
   const [title, setTitle] = useState(existing?.title ?? '');
   const [recurrence, setRecurrence] = useState<Recurrence>(existing?.recurrence ?? 'weekly');
   const [rotation, setRotation] = useState<string[]>(existing?.rotation ?? active.map((a) => a.user_id));
-  const [due, setDue] = useState(existing?.next_due ?? fmt.isoDate(new Date()));
+  const [due, setDue] = useState(existing?.next_due ?? todayIn(household?.households.timezone));
   const [error, setError] = useState<string | null>(null);
 
   async function submit() {

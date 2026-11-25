@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Alert, Pressable, TextInput, View } from 'react-native';
 
 import { Avatar } from '@/components/Avatar';
+import { ContentMenu } from '@/components/ContentMenu';
 import { MeButton } from '@/components/MeButton';
 import { ReactionBar } from '@/components/ReactionBar';
 import { Card, Empty, ErrorText, FeatureHeader, IconButton, Loading, Row, Screen, Txt, useColors, useFeatureColors } from '@/components/ui';
@@ -113,6 +114,7 @@ export default function Board() {
               {mine || isAdmin ? (
                 <IconButton icon="trash-outline" label={t.common.delete} size={20} onPress={() => confirmDelete(p.id)} />
               ) : null}
+              {mine ? null : <ContentMenu kind="post" id={p.id} authorId={p.author_id} />}
             </Row>
 
             <Txt selectable style={{ fontSize: 16, lineHeight: 24 }}>

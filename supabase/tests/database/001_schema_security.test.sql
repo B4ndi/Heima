@@ -65,7 +65,8 @@ select is(
    from information_schema.role_table_grants
    where grantee = 'authenticated' and table_schema = 'public'
      and table_name in ('household_members', 'invites', 'invite_attempts', 'audit_log',
-                        'polls', 'poll_options', 'poll_votes', 'chore_completions', 'households')
+                        'polls', 'poll_options', 'poll_votes', 'chore_completions', 'households',
+                        'content_reports')
      and privilege_type in ('INSERT', 'TRUNCATE', 'REFERENCES', 'TRIGGER')),
   null,
   'RPC-only tables have no direct INSERT grants'

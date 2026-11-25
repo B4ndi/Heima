@@ -26,3 +26,22 @@ export function parseLocal(date: string, time: string): Date | null {
   if (Number.isNaN(d.getTime()) || d.getMonth() !== +dm[2] - 1 || +tm[1] > 23 || +tm[2] > 59) return null;
   return d;
 }
+
+/**
+ * Today's date (YYYY-MM-DD) in the household's time zone, matching what the
+ * database uses for chores. Falls back to the device's zone if the runtime
+ * cannot resolve the zone.
+ */
+export function todayIn(timeZone: string | null | undefined, now: Date = new Date()): string {
+  if (timeZone) {
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
+      const get = (type: string) => parts.find((p) => p.type === type)?.value;
+      const [y, m, d] = [get('year'), get('month'), get('day')];
+      if (y && m && d) return `${y}-${m}-${d}`;
+    } catch {
+      // unknown zone or no Intl time zone support: fall through
+    }
+  }
+  return format(now, 'yyyy-MM-dd');
+}

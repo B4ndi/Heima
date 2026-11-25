@@ -24,6 +24,8 @@ export const schemas = {
   eventDescription: z.string().trim().max(1000).optional(),
   eventLocation: z.string().trim().max(120).optional(),
   choreTitle: text(100),
+  reportDetails: z.string().trim().max(500),
+  timezone: z.string().trim().min(1).max(64).regex(/^[A-Za-z0-9_+/-]+$/),
 };
 
 /** Format a normalised code as XXXXX-XXXXX for display. */
