@@ -1,16 +1,19 @@
-import { useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { View } from 'react-native';
 
+import { Avatar } from '@/components/Avatar';
+import { ReactionBar } from '@/components/ReactionBar';
 import { Button, Card, ErrorText, IconButton, Input, Loading, Row, Screen, Txt } from '@/components/ui';
 import { useBoardMutations, useComments, usePosts } from '@/features/board';
-import { nb } from '@/i18n/nb';
+import { t } from '@/i18n';
 import { fmt } from '@/lib/dates';
 import { userMessage } from '@/lib/errors';
 import { useUserId } from '@/providers/AuthProvider';
 import { useHousehold, useHouseholdId } from '@/providers/HouseholdProvider';
 
 export default function PostDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, edit } = useLocalSearchParams<{ id: string; edit?: string }>();
   const hh = useHouseholdId();
   const me = useUserId();
   const { nameOf, isAdmin } = useHousehold();
@@ -18,7 +21,15 @@ export default function PostDetail() {
   const comments = useComments(id);
   const m = useBoardMutations(hh);
   const [draft, setDraft] = useState('');
+  // editText stays null until the user types; the field then falls back to the post's current text.
+  const [editText, setEditText] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(edit === '1');
   const [error, setError] = useState<string | null>(null);
+
+  function closeEdit() {
+    setEditText(null);
+    setEditOpen(false);
+  }
 
   async function send() {
     setError(null);
@@ -30,40 +41,88 @@ export default function PostDetail() {
     }
   }
 
+  async function saveEdit() {
+    if (editText == null) return closeEdit(); // nothing changed
+    setError(null);
+    try {
+      await m.edit.mutateAsync({ id, body: editText });
+      closeEdit();
+    } catch (e) {
+      setError(userMessage(e));
+    }
+  }
+
   if (!post) return <Loading />;
+  const mine = post.author_id === me;
 
   return (
-    <Screen edges={['bottom']}>
-      <Card>
-        <Txt variant="small">
-          {nameOf(post.author_id)} · {fmt.dateTime(post.created_at)}
-        </Txt>
-        <Txt selectable>{post.body}</Txt>
+    <Screen feature="board" edges={['bottom']}>
+      <Stack.Screen options={{ title: editOpen ? t.board.editTitle : t.tabs.board }} />
+      <Card style={{ gap: 12 }}>
+        <Row style={{ gap: 10 }}>
+          <Avatar userId={post.author_id} size={36} />
+          <View style={{ flex: 1 }}>
+            <Txt variant="heading" style={{ fontSize: 15 }}>
+              {nameOf(post.author_id)}
+            </Txt>
+            <Txt variant="small">{fmt.dateTime(post.created_at)}</Txt>
+          </View>
+          {mine && !editOpen ? <IconButton icon="create-outline" label={t.common.edit} size={20} onPress={() => setEditOpen(true)} /> : null}
+        </Row>
+
+        {editOpen && mine ? (
+          <>
+            <Input value={editText ?? post.body} onChangeText={setEditText} multiline maxLength={4000} aria-label={t.board.editTitle} />
+            <Row>
+              <Button title={t.common.save} small onPress={saveEdit} loading={m.edit.isPending} />
+              <Button
+                title={t.common.cancel}
+                small
+                variant="ghost"
+                onPress={closeEdit}
+              />
+            </Row>
+          </>
+        ) : (
+          <Txt selectable style={{ fontSize: 16, lineHeight: 24 }}>
+            {post.body}
+          </Txt>
+        )}
+
+        <ReactionBar
+          reactions={post.post_reactions ?? []}
+          onToggle={(emoji, isMine) => m.react.mutate({ postId: post.id, emoji, mine: isMine })}
+        />
       </Card>
 
       {comments.data?.map((cm) => (
-        <Card key={cm.id}>
-          <Row style={{ justifyContent: 'space-between' }}>
-            <Txt variant="small">
-              {nameOf(cm.author_id)} · {fmt.relative(cm.created_at)}
-            </Txt>
-            {cm.author_id === me || isAdmin ? (
-              <IconButton
-                icon="trash-outline"
-                label={nb.common.delete}
-                onPress={() => m.removeComment.mutate({ id: cm.id, postId: id })}
-              />
-            ) : null}
-          </Row>
-          <Txt selectable>{cm.body}</Txt>
-        </Card>
+        <Row key={cm.id} style={{ alignItems: 'flex-start', gap: 10 }}>
+          <Avatar userId={cm.author_id} size={30} />
+          <Card style={{ flex: 1, paddingVertical: 12, gap: 4 }}>
+            <Row style={{ justifyContent: 'space-between' }}>
+              <Txt variant="small">
+                <Txt variant="small" style={{ fontWeight: '600' }}>
+                  {nameOf(cm.author_id)}
+                </Txt>{' '}
+                · {fmt.relative(cm.created_at)}
+              </Txt>
+              {cm.author_id === me || isAdmin ? (
+                <IconButton
+                  icon="trash-outline"
+                  label={t.common.delete}
+                  size={18}
+                  onPress={() => m.removeComment.mutate({ id: cm.id, postId: id })}
+                />
+              ) : null}
+            </Row>
+            <Txt selectable>{cm.body}</Txt>
+          </Card>
+        </Row>
       ))}
 
-      <Card>
-        <Input value={draft} onChangeText={setDraft} placeholder={nb.board.commentPlaceholder} multiline maxLength={1000} />
-        <ErrorText message={error} />
-        <Button title={nb.board.post} onPress={send} small loading={m.comment.isPending} disabled={!draft.trim()} />
-      </Card>
+      <Input value={draft} onChangeText={setDraft} placeholder={t.board.commentPlaceholder} multiline maxLength={1000} />
+      <ErrorText message={error} />
+      <Button title={t.board.post} onPress={send} loading={m.comment.isPending} disabled={!draft.trim()} />
     </Screen>
   );
 }

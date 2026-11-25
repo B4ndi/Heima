@@ -105,3 +105,47 @@ export async function deleteMyAccount(): Promise<void> {
   if (error) throw error;
   await supabase.auth.signOut({ scope: 'local' });
 }
+
+/**
+ * Pick, shrink and upload a profile picture.
+ * Re-encoding to a 512 px JPEG strips EXIF metadata (GPS position, camera
+ * serial numbers) before anything leaves the phone. Each upload gets a new
+ * file name so cached signed URLs never show a stale picture; the old file
+ * is deleted. Storage RLS only allows writes to the user's own folder.
+ */
+export async function pickAndUploadAvatar(userId: string, oldPath: string | null): Promise<boolean> {
+  const ImagePicker = await import('expo-image-picker');
+  const { ImageManipulator, SaveFormat } = await import('expo-image-manipulator');
+
+  const picked = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 1,
+    exif: false,
+  });
+  if (picked.canceled || !picked.assets?.[0]) return false;
+
+  const image = await ImageManipulator.manipulate(picked.assets[0].uri).resize({ width: 512 }).renderAsync();
+  const result = await image.saveAsync({ format: SaveFormat.JPEG, compress: 0.8 });
+  const bytes = await (await fetch(result.uri)).arrayBuffer();
+  if (bytes.byteLength > 2 * 1024 * 1024) throw Object.assign(new Error('too large'), { code: 'image_too_large' });
+
+  const path = `${userId}/avatar-${Date.now()}.jpg`;
+  const { error: upErr } = await supabase.storage.from('avatars').upload(path, bytes, {
+    contentType: 'image/jpeg',
+    upsert: false,
+  });
+  if (upErr) throw upErr;
+
+  const { error } = await supabase.from('profiles').update({ avatar_path: path }).eq('id', userId);
+  if (error) throw error;
+  if (oldPath) await supabase.storage.from('avatars').remove([oldPath]);
+  return true;
+}
+
+export async function removeAvatar(userId: string, oldPath: string | null): Promise<void> {
+  const { error } = await supabase.from('profiles').update({ avatar_path: null }).eq('id', userId);
+  if (error) throw error;
+  if (oldPath) await supabase.storage.from('avatars').remove([oldPath]);
+}

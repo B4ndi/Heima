@@ -41,6 +41,21 @@ export function useChoreMutations(hh: string) {
       },
       onSuccess: invalidate,
     }),
+    update: useMutation({
+      mutationFn: async ({ id, ...input }: { id: string; title: string; recurrence: Recurrence; rotation: string[]; next_due: string }) => {
+        const { error } = await supabase
+          .from('chores')
+          .update({
+            title: schemas.choreTitle.parse(input.title),
+            recurrence: input.recurrence,
+            rotation: input.rotation,
+            next_due: input.next_due,
+          })
+          .eq('id', id);
+        if (error) throw error;
+      },
+      onSuccess: invalidate,
+    }),
     complete: useMutation({
       mutationFn: async (id: string) => {
         const { error } = await supabase.rpc('complete_chore', { p_chore: id });
@@ -56,4 +71,16 @@ export function useChoreMutations(hh: string) {
       onSuccess: invalidate,
     }),
   };
+}
+
+export function useChore(id: string | undefined) {
+  return useQuery({
+    queryKey: ['chores', 'one', id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('chores').select('*').eq('id', id!).single();
+      if (error) throw error;
+      return data as Chore;
+    },
+  });
 }

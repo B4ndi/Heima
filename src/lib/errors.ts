@@ -1,4 +1,4 @@
-import { nb } from '@/i18n/nb';
+import { t } from '@/i18n';
 
 /**
  * Map backend errors to safe Norwegian messages. Raw database/HTTP errors are
@@ -7,38 +7,40 @@ import { nb } from '@/i18n/nb';
  */
 export function userMessage(err: unknown): string {
   const e = err as { code?: string; message?: string; status?: number; name?: string } | null;
-  if (!e) return nb.errors.generic;
-  if (e.name === 'ZodError') return nb.errors.validation;
-  if (e.message && /network|fetch failed|Failed to fetch/i.test(e.message)) return nb.errors.network;
+  if (!e) return t.errors.generic;
+  if (e.name === 'ZodError') return t.errors.validation;
+  if (e.message && /network|fetch failed|Failed to fetch/i.test(e.message)) return t.errors.network;
   switch (e.code) {
+    case 'image_too_large':
+      return t.errors.imageTooLarge;
     case 'P0001':
-      return e.message ?? nb.errors.generic; // business-rule message written by us
+      return e.message ?? t.errors.generic; // business-rule message written by us
     case '42501':
-      return nb.errors.forbidden;
+      return t.errors.forbidden;
     case '28000':
     case 'PGRST301':
-      return nb.errors.session;
+      return t.errors.session;
     case '23514':
     case '22023':
     case '23502':
-      return nb.errors.validation;
+      return t.errors.validation;
     case 'over_request_rate_limit':
     case 'over_email_send_rate_limit':
-      return nb.errors.tooMany;
+      return t.errors.tooMany;
   }
-  if (e.status === 429) return nb.errors.tooMany;
-  return nb.errors.generic;
+  if (e.status === 429) return t.errors.tooMany;
+  return t.errors.generic;
 }
 
 export function rpcErrorMessage(code: string): string {
   switch (code) {
     case 'rate_limited':
-      return nb.errors.tooMany;
+      return t.errors.tooMany;
     case 'too_many_households':
-      return nb.errors.tooManyHouseholds;
+      return t.errors.tooManyHouseholds;
     case 'household_full':
-      return nb.errors.householdFull;
+      return t.errors.householdFull;
     default:
-      return nb.errors.invalidCode;
+      return t.errors.invalidCode;
   }
 }

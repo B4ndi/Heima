@@ -1,16 +1,20 @@
 import { format, formatDistanceToNowStrict, isToday, isTomorrow, parseISO } from 'date-fns';
-import { nb as nbLocale } from 'date-fns/locale';
 
-import { nb } from '@/i18n/nb';
+import { dateLocale, t } from '@/i18n';
+
+const opts = { locale: dateLocale };
 
 export const fmt = {
-  relative: (iso: string) => formatDistanceToNowStrict(parseISO(iso), { addSuffix: true, locale: nbLocale }),
+  relative: (iso: string) => formatDistanceToNowStrict(parseISO(iso), { addSuffix: true, ...opts }),
   dayLabel: (d: Date) =>
-    isToday(d) ? nb.calendar.today : isTomorrow(d) ? nb.calendar.tomorrow : format(d, 'EEEE d. MMMM', { locale: nbLocale }),
-  time: (iso: string) => format(parseISO(iso), 'HH:mm', { locale: nbLocale }),
-  date: (iso: string) => format(parseISO(iso), 'd. MMM', { locale: nbLocale }),
-  dateTime: (iso: string) => format(parseISO(iso), "d. MMM 'kl.' HH:mm", { locale: nbLocale }),
+    isToday(d) ? t.calendar.today : isTomorrow(d) ? t.calendar.tomorrow : format(d, 'EEEE d. MMMM', opts),
+  monthTitle: (d: Date) => format(d, 'LLLL yyyy', opts),
+  weekdayShort: (d: Date) => format(d, 'EEEEEE', opts),
+  time: (iso: string) => format(parseISO(iso), 'HH:mm', opts),
+  date: (iso: string) => format(parseISO(iso), 'd. MMM', opts),
+  dateTime: (iso: string) => format(parseISO(iso), 'd. MMM HH:mm', opts),
   isoDate: (d: Date) => format(d, 'yyyy-MM-dd'),
+  hhmm: (d: Date) => format(d, 'HH:mm'),
 };
 
 /** Parse "YYYY-MM-DD" + "HH:MM" as local time (device time zone). */

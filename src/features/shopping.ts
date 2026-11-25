@@ -90,6 +90,17 @@ export function useShoppingMutations(hh: string) {
       onError: (_e, _v, ctx) => ctx && qc.setQueryData(ctx.key, ctx.prev),
       onSettled: (_d, _e, v) => items(v.item.list_id),
     }),
+    editItem: useMutation({
+      mutationFn: async ({ id, text, quantity }: { id: string; listId: string; text: string; quantity?: string }) => {
+        const q = schemas.quantity.parse(quantity);
+        const { error } = await supabase
+          .from('shopping_items')
+          .update({ text: schemas.itemText.parse(text), quantity: q ? q : null })
+          .eq('id', id);
+        if (error) throw error;
+      },
+      onSuccess: (_d, v) => items(v.listId),
+    }),
     removeItem: useMutation({
       mutationFn: async ({ id }: { id: string; listId: string }) => {
         const { error } = await supabase.from('shopping_items').delete().eq('id', id);
@@ -105,4 +116,20 @@ export function useShoppingMutations(hh: string) {
       onSuccess: (_d, listId) => items(listId),
     }),
   };
+}
+
+/** Number of unchecked items across all lists in the household (for the home screen). */
+export function useOpenItemCount(hh: string) {
+  return useQuery({
+    queryKey: ['shopping_items', 'open-count', hh],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('shopping_items')
+        .select('id', { count: 'exact', head: true })
+        .eq('household_id', hh)
+        .eq('checked', false);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
 }

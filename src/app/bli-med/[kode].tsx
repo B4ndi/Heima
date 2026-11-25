@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { Button, Card, ErrorText, Loading, Screen, Txt } from '@/components/ui';
 import { joinHousehold, previewInvite } from '@/features/households';
-import { nb } from '@/i18n/nb';
+import { t } from '@/i18n';
 import { rpcErrorMessage, userMessage } from '@/lib/errors';
 import { formatCode, schemas } from '@/lib/validation';
 import { useHousehold } from '@/providers/HouseholdProvider';
@@ -20,7 +20,7 @@ export default function JoinHousehold() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const parsed = schemas.inviteCode.safeParse(kode ?? '');
-  const shownError = parsed.success ? error : nb.errors.invalidCode;
+  const shownError = parsed.success ? error : t.errors.invalidCode;
 
   useEffect(() => {
     if (!parsed.success) return;
@@ -55,11 +55,11 @@ export default function JoinHousehold() {
       {!preview && !shownError ? <Loading /> : null}
       {preview ? (
         <Card>
-          <Txt variant="heading">{nb.join.confirm(preview.name)}</Txt>
-          <Txt variant="muted">{nb.join.members(preview.members)}</Txt>
-          {preview.approval ? <Txt variant="small">{nb.join.approvalNote}</Txt> : null}
-          <Button title={nb.join.join} onPress={join} loading={busy} />
-          <Button title={nb.common.cancel} variant="ghost" onPress={() => router.back()} />
+          <Txt variant="heading">{t.join.confirm(preview.name)}</Txt>
+          <Txt variant="muted">{t.join.members(preview.members)}</Txt>
+          {preview.approval ? <Txt variant="small">{t.join.approvalNote}</Txt> : null}
+          <Button title={t.join.join} onPress={join} loading={busy} />
+          <Button title={t.common.cancel} variant="ghost" onPress={() => router.back()} />
         </Card>
       ) : null}
       <ErrorText message={shownError} />

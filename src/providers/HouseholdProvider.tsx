@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { nb } from '@/i18n/nb';
+import { t } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import type { Household, Member, Profile } from '@/lib/types';
 import { useAuth } from '@/providers/AuthProvider';
@@ -23,6 +23,8 @@ interface HouseholdState {
   members: Member[];
   profiles: Record<string, Profile>;
   nameOf: (userId: string | null | undefined) => string;
+  /** Short-lived signed URL of a housemate's avatar, if they have one. */
+  avatarUrl: (userId: string | null | undefined) => string | null;
   refresh: () => Promise<void>;
 }
 
@@ -68,8 +70,18 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
       if (e2) throw e2;
       const map: Record<string, Profile> = {};
       for (const p of profiles ?? []) map[p.id] = p as Profile;
-      return { members: (members ?? []) as Member[], profiles: map };
+
+      // Avatars live in a private bucket; storage RLS only lets housemates
+      // sign them. URLs expire after an hour and the roster refreshes before that.
+      const paths = Object.values(map).map((p) => p.avatar_path).filter((x): x is string => !!x);
+      const avatars: Record<string, string> = {};
+      if (paths.length) {
+        const { data: signed } = await supabase.storage.from('avatars').createSignedUrls(paths, 3600);
+        for (const s of signed ?? []) if (s.path && s.signedUrl) avatars[s.path] = s.signedUrl;
+      }
+      return { members: (members ?? []) as Member[], profiles: map, avatars };
     },
+    refetchInterval: 50 * 60 * 1000,
   });
 
   // Realtime: private, RLS-authorised channel. Payloads only say *what*
@@ -86,6 +98,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
           const table = (payload as { table?: string })?.table;
           const keys: Record<string, string[][]> = {
             posts: [['posts', hh]],
+            post_reactions: [['posts', hh]],
             post_comments: [['comments'], ['posts', hh]],
             polls: [['polls', hh]],
             poll_votes: [['polls', hh], ['poll_results']],
@@ -121,7 +134,11 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
       setActive,
       members: rosterQ.data?.members ?? [],
       profiles,
-      nameOf: (id) => (id ? (id === userId ? nb.common.you : profiles[id]?.display_name ?? nb.common.deletedUser) : nb.common.deletedUser),
+      avatarUrl: (id) => {
+        const path = id ? profiles[id]?.avatar_path : null;
+        return path ? (rosterQ.data?.avatars[path] ?? null) : null;
+      },
+      nameOf: (id) => (id ? (id === userId ? t.common.you : profiles[id]?.display_name ?? t.common.deletedUser) : t.common.deletedUser),
       refresh: async () => {
         await qc.invalidateQueries({ queryKey: ['memberships'] });
         await qc.invalidateQueries({ queryKey: ['roster'] });

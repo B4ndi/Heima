@@ -45,6 +45,7 @@ The **database is the only place authorisation is decided**. Every request from 
 | S4 | Spoofing another user as author | DB | `author_id`/`created_by` default `auth.uid()`, **not in INSERT grant**, WITH CHECK repeats it | pgTAP 003 "cannot spoof post author" |
 | T1 | Moving rows to another household / editing identity columns | DB | Column-level UPDATE grants exclude `household_id`, authors, `role`, timestamps | pgTAP 001 #8, 003 |
 | T2 | Child row attached to another household's parent | DB | Composite FKs `(parent_id, household_id)` | pgTAP 003 "composite FK" |
+| T5 | Abuse via reactions (spoofing, spam, free text) | DB | `user_id` = `auth.uid()` (not insertable), fixed 6-emoji allowlist, one row per user+emoji, own-only delete | pgTAP 004 |
 | T3 | Tampered chore rotation (non-members, index jumps) | DB | Trigger validates rotation ⊆ active members; `rotation_index` not client-writable | pgTAP 003 |
 | T4 | Malicious OTA update | App | EAS Update code signing | `docs/production.md` |
 | R1 | Admin abuses moderation without trace | DB | Append-only `audit_log` written only by SECURITY DEFINER code; admins can read | migration 0100 |
@@ -55,6 +56,7 @@ The **database is the only place authorisation is decided**. Every request from 
 | I5 | Error messages leak schema | App | `userMessage()` maps DB errors to generic Norwegian messages | unit test `errors.test.ts` |
 | I6 | Secret key shipped in app | App/CI | `env.ts` refuses `sb_secret_`/service-role JWT at startup; gitleaks in CI; push protection | `src/lib/env.ts` |
 | I7 | Avatar enumeration | Storage | Private bucket, signed URLs, readable only by housemates | storage policies |
+| I8 | Location leak via photo metadata | App | Avatars re-encoded to a 512 px JPEG on the phone before upload, which strips EXIF (GPS, device serial) | `pickAndUploadAvatar` |
 | D1 | Brute-forcing invite codes | DB | 50-bit codes; 5 failures / 15 min / user then lockout (failures are committed, not rolled back); expiry ≤ 7 d; use limits | pgTAP 002, curl test 6 |
 | D2 | Resource abuse (huge payloads, many rows) | DB/API | Length CHECKs on all text; max 10 households/user, 30 members/household, 10 active invites, 10 poll options; `max_rows` 500 | constraints |
 | D3 | Sign-up / OTP flooding | Auth | Supabase Auth rate limits + Turnstile CAPTCHA (hosted) | `docs/production.md` |
