@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "Heima",
-    "slug": "heima",
+    "name": "Heimvis",
+    "slug": "heimvis",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "heima",
+    "scheme": "heimvis",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "no.heima.app",
+      "bundleIdentifier": "no.heimvis.app",
       "supportsTablet": false,
       "config": {
         "usesNonExemptEncryption": false
@@ -28,7 +28,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "no.heima.app",
+      "package": "no.heimvis.app",
       "allowBackup": false,
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -62,7 +62,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Heima bruker bildene dine bare når du velger et profilbilde.",
+          "photosPermission": "Heimvis bruker bildene dine bare når du velger et profilbilde.",
           "cameraPermission": false,
           "microphonePermission": false
         }

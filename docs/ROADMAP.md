@@ -1,15 +1,15 @@
 # Roadmap: to the App Store
 
-Goal: Heima in the App Store as soon as possible, at the lowest cost that keeps it up.
+Goal: Heimvis in the App Store as soon as possible, at the lowest cost that keeps it up.
 
 ## 0. Decisions for the owner (before the first App Store build)
 
 These are hard or impossible to change later.
 
-- [ ] **App name**: check that "Heima" is available (reserved by creating the app in App Store Connect).
-- [ ] **Bundle ID**: currently `no.heima.app`. Permanent once registered.
+- [x] **App name**: **Heimvis** (2026-11-25). "Heima" was taken by two household apps. Still to do: reserve the name by creating the app in App Store Connect, and search Patentstyret for "heimvis".
+- [x] **Bundle ID**: `no.heimvis.app` (deep-link scheme `heimvis://`). Permanent once registered.
 - [ ] **Apple account type**: personal (your name shown as seller) or organisation (needs an org. number and a D-U-N-S number, 1–2 weeks).
-- [ ] **Domain** (e.g. `heima.no`): used for the email sender, the website, invite links (universal links) and `security.txt`.
+- [x] **Domain**: `heimvis.no`. Used for the email sender, the website, invite links (universal links) and `security.txt`.
 - [ ] **Age limit**: 13+ (the GDPR consent age in Norway) or 16+.
 
 ## 1. Required before App Store submission

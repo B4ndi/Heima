@@ -13,7 +13,7 @@ What is in the repo is enforced automatically. The items below are settings on h
 ## Supabase (two projects: `heima-staging`, `heima-prod`, both **EU region**)
 - [ ] MFA on every Supabase dashboard account; least-privilege org roles
 - [ ] Deploy schema only via the `Deploy database` workflow
-- [ ] Auth → URL configuration: Site URL `heima://`, redirect allowlist exactly `heima://auth-callback` (no wildcards)
+- [ ] Auth → URL configuration: Site URL `heimvis://`, redirect allowlist exactly `heimvis://auth-callback` (no wildcards)
 - [ ] Auth → Email: confirm email ON, OTP length 8, expiry 900 s, secure email change ON
 - [ ] Auth → Email templates: paste `supabase/templates/otp.html` into *Confirm signup* and *Magic link* (code only, no link)
 - [ ] Auth → Bot protection: Cloudflare Turnstile ON (add the site key to the app when enabled)

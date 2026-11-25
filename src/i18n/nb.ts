@@ -1,6 +1,6 @@
 // Norwegian (bokmål) UI strings. This file defines the shape every language must follow.
 export const nb = {
-  appName: 'Heima',
+  appName: 'Heimvis',
   common: {
     save: 'Lagre',
     cancel: 'Avbryt',
@@ -29,7 +29,7 @@ export const nb = {
     imageTooLarge: 'Bildet er for stort.',
   },
   auth: {
-    title: 'Velkommen til Heima',
+    title: 'Velkommen til Heimvis',
     subtitle: 'Alt for kollektivet ditt på ett sted.',
     email: 'E-post',
     sendCode: 'Send engangskode',
@@ -180,7 +180,7 @@ export const nb = {
     share: 'Del',
     copied: 'Kopiert',
     shareMessage: (name: string, code: string, link: string) =>
-      `Bli med i «${name}» på Heima!\n\nKode: ${code}\n${link}`,
+      `Bli med i «${name}» på Heimvis!\n\nKode: ${code}\n${link}`,
     activeInvites: 'Aktive invitasjoner',
     revoke: 'Trekk tilbake',
     expires: (d: string) => `utløper ${d}`,

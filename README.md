@@ -1,4 +1,4 @@
-# Heima
+# Heimvis
 
 App som gjør bokollektiv enklere: oppslagstavle, avstemninger, felles handlelister, kalender og vaskeliste for husstanden. Inviter beboere med en kode eller lenke.
 

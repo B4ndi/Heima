@@ -1,4 +1,4 @@
-# Threat model: Heima
+# Threat model: Heimvis
 
 Method: STRIDE per component and trust boundary. Baselines: OWASP MASVS L1 (app), OWASP API Security Top 10 2023 (backend), GDPR (data).
 

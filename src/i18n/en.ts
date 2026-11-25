@@ -2,7 +2,7 @@ import type { Strings } from './nb';
 
 // English UI strings. Must have exactly the same shape as nb.ts (enforced by the type).
 export const en: Strings = {
-  appName: 'Heima',
+  appName: 'Heimvis',
   common: {
     save: 'Save',
     cancel: 'Cancel',
@@ -31,7 +31,7 @@ export const en: Strings = {
     imageTooLarge: 'The image is too large.',
   },
   auth: {
-    title: 'Welcome to Heima',
+    title: 'Welcome to Heimvis',
     subtitle: 'Everything for your shared home in one place.',
     email: 'Email',
     sendCode: 'Send one-time code',
@@ -182,7 +182,7 @@ export const en: Strings = {
     share: 'Share',
     copied: 'Copied',
     shareMessage: (name: string, code: string, link: string) =>
-      `Join “${name}” on Heima!\n\nCode: ${code}\n${link}`,
+      `Join “${name}” on Heimvis!\n\nCode: ${code}\n${link}`,
     activeInvites: 'Active invites',
     revoke: 'Revoke',
     expires: (d: string) => `expires ${d}`,

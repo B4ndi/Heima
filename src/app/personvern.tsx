@@ -4,7 +4,7 @@ import { Screen, Txt } from '@/components/ui';
 const SECTIONS: [string, string][] = [
   [
     'Hvem er behandlingsansvarlig?',
-    'Heima drives av [navn / organisasjon]. Kontakt: [e-post]. Spørsmål om personvern kan rettes hit.',
+    'Heimvis drives av [navn / organisasjon]. Kontakt: [e-post]. Spørsmål om personvern kan rettes hit.',
   ],
   [
     'Hvilke opplysninger lagrer vi?',

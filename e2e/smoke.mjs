@@ -28,7 +28,7 @@ async function otpFor(email) {
 
 async function signIn(page, email) {
   await page.goto(APP);
-  await page.getByText('Velkommen til Heima').waitFor();
+  await page.getByText('Velkommen til Heimvis').waitFor();
   await page.getByRole('textbox').first().fill(email);
   await page.getByRole('button', { name: 'Send engangskode', exact: true }).click();
   await page.getByText('Vi har sendt en kode').waitFor();
@@ -69,7 +69,7 @@ try {
   const visible = (loc) => loc.filter({ visible: true }).first();
 
   // --- Anne: sign up, create household -> lands on Home
-  await signIn(anne, `anne-${run}@heima.test`);
+  await signIn(anne, `anne-${run}@heimvis.test`);
   await visible(anne.getByText('Opprett en husstand')).waitFor();
   await anne.getByPlaceholder('Visningsnavn').fill('Anne');
   await anne.getByPlaceholder('F.eks.').fill('Kollektivet Testgata 1');
@@ -89,7 +89,7 @@ try {
   await anne.goBack();
 
   // --- Bjørn: sign up, preview + confirm join
-  await signIn(bjorn, `bjorn-${run}@heima.test`);
+  await signIn(bjorn, `bjorn-${run}@heimvis.test`);
   await bjorn.getByPlaceholder('Visningsnavn').fill('Bjørn');
   await bjorn.getByPlaceholder('XXXXX-XXXXX').fill(code.toLowerCase());
   await bjorn.getByRole('button', { name: 'Fortsett', exact: true }).click();

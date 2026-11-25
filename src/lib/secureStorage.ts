@@ -19,8 +19,8 @@ import { Platform } from 'react-native';
  * (cleared when the tab closes). The production target is iOS/Android.
  */
 
-const PREFIX = 'heima.enc.';
-const keyName = (key: string) => `heima_k_${key.replace(/[^A-Za-z0-9._-]/g, '_')}`;
+const PREFIX = 'heimvis.enc.';
+const keyName = (key: string) => `heimvis_k_${key.replace(/[^A-Za-z0-9._-]/g, '_')}`;
 const SECURE_OPTS: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
 };

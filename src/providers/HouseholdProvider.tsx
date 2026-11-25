@@ -8,7 +8,7 @@ import type { Household, Member, Profile } from '@/lib/types';
 import { useAuth } from '@/providers/AuthProvider';
 
 // Only the *id* of the selected household is stored (not sensitive).
-const ACTIVE_KEY = 'heima.activeHousehold';
+const ACTIVE_KEY = 'heimvis.activeHousehold';
 
 interface Membership extends Member {
   households: Household;
