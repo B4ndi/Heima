@@ -38,6 +38,8 @@ Done: 1.1 (2026-11-25). Report reasons are a fixed list; admins see reports (not
 | 2.4 | `export_my_data` includes reactions and avatar path | GDPR art. 15 completeness |
 | 2.5 | Date and time pickers instead of typed `YYYY-MM-DD` | UX; affects every form |
 
+In progress: 1.6. `eas.json` (preview/production), EAS Update with a `preview` channel published from `main` (see `docs/testing.md`). Still to do: update code signing, build-based `runtimeVersion` policy, first native build.
+
 Done: 2.1 (2026-11-25). Admins change the zone in Settings; the app's "overdue" uses the same zone.
 
 ## 3. After launch / when needed

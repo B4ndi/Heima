@@ -2,11 +2,18 @@
   "expo": {
     "name": "Heimvis",
     "slug": "heimvis",
+    "owner": "b4ndi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "heimvis",
     "userInterfaceStyle": "automatic",
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/0bbe09f1-dec3-4f90-ab34-b0b2e303a42a"
+    },
     "ios": {
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "no.heimvis.app",
@@ -73,7 +80,10 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "0bbe09f1-dec3-4f90-ab34-b0b2e303a42a"
+      }
     }
   }
 }

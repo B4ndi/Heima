@@ -1,0 +1,17 @@
+# Runs on Expo's servers (EAS Workflows), triggered through the Expo GitHub app:
+# every merge to main publishes the JS bundle to the `preview` channel.
+# EXPO_PUBLIC_* values come from the EAS `preview` environment on expo.dev
+# (staging Supabase URL + publishable key only; never a secret key).
+name: Publish preview update
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  publish_preview:
+    name: Publish preview update
+    type: update
+    environment: preview
+    params:
+      channel: preview
