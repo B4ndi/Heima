@@ -5,7 +5,7 @@ Every merge to `main` publishes the app to the EAS Update channel **`preview`**
 The preview build talks to the **staging** Supabase project.
 
 ## One-time setup (done)
-- Expo project `b4ndi/heimvis` linked to this GitHub repository.
+- Expo project `b4ndi/heima` (slug `heima`; the app is still named Heimvis) linked to this GitHub repository.
 - EAS environment **preview** on expo.dev: `EXPO_PUBLIC_SUPABASE_URL` and
   `EXPO_PUBLIC_SUPABASE_KEY` (staging URL and **publishable** key only).
 - Staging Supabase auth: OTP length 8, expiry 900 s, `supabase/templates/otp.html`
@@ -13,7 +13,7 @@ The preview build talks to the **staging** Supabase project.
 
 ## Open the latest version
 1. Install **Expo Go** on the phone.
-2. expo.dev → project **heimvis** → **Updates** → newest update on the `preview` branch.
+2. expo.dev → project **heima** → **Updates** → newest update on the `preview` branch.
 3. Scan its QR code with the phone camera; it opens in Expo Go.
 
 Expo Go only loads updates whose runtime matches its SDK (`runtimeVersion.policy`
