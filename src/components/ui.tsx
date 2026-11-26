@@ -33,6 +33,10 @@ export function useFeature() {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   return FeatureColors[scheme][useContext(FeatureCtx)];
 }
+/** Give part of a screen another feature colour (buttons, chips and switches inside pick it up). */
+export function FeatureScope({ feature, children }: { feature: Feature; children: ReactNode }) {
+  return <FeatureCtx.Provider value={feature}>{children}</FeatureCtx.Provider>;
+}
 export function useFeatureColors(feature: Feature) {
   return FeatureColors[useColorScheme() === 'dark' ? 'dark' : 'light'][feature];
 }

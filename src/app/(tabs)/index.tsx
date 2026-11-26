@@ -6,11 +6,13 @@ import { Pressable, View } from 'react-native';
 
 import { Avatar } from '@/components/Avatar';
 import { MeButton } from '@/components/MeButton';
-import { Button, Card, FeatureHeader, Row, Screen, Txt, useColors, useFeatureColors, type IconName } from '@/components/ui';
+import { Button, Card, FeatureHeader, FeatureScope, Row, Screen, Txt, useColors, useFeatureColors, type IconName } from '@/components/ui';
+import { ZootBackdrop, ZootTagline } from '@/components/Zoot';
+import { Zoot } from '@/constants/theme';
 import type { Feature } from '@/constants/theme';
 import { usePosts } from '@/features/board';
 import { useEvents } from '@/features/calendar';
-import { choreAssignee, useChoreMutations, useChores } from '@/features/chores';
+import { choreAssignee, isZootChore, useChoreMutations, useChores } from '@/features/chores';
 import { usePolls } from '@/features/polls';
 import { useOpenItemCount } from '@/features/shopping';
 import { t } from '@/i18n';
@@ -105,21 +107,33 @@ export default function Home() {
         ) : (
           myChores.map((ch) => {
             const overdue = ch.next_due < today;
+            const zoot = isZootChore(ch.title);
             return (
-              <Card key={ch.id} style={{ borderLeftWidth: 4, borderLeftColor: fChores.fg }}>
-                <Row style={{ justifyContent: 'space-between' }}>
-                  <View style={{ flex: 1 }}>
-                    <Txt variant="heading">{ch.title}</Txt>
-                    <Txt variant={overdue ? 'error' : 'small'}>
-                      {overdue ? `${t.chores.overdue} · ` : ''}
-                      {t.chores.due(fmt.date(ch.next_due))}
-                    </Txt>
-                  </View>
-                  <View>
-                    <Button title={t.chores.done} icon="checkmark" small onPress={() => choreM.complete.mutate(ch.id)} />
-                  </View>
-                </Row>
-              </Card>
+              <FeatureScope key={ch.id} feature={zoot ? 'zoot' : 'chores'}>
+                <Card
+                  tint={zoot ? Zoot.card : undefined}
+                  style={{ borderLeftWidth: 4, borderLeftColor: zoot ? Zoot.accent : fChores.fg, overflow: 'hidden' }}>
+                  {zoot ? <ZootBackdrop /> : null}
+                  <Row style={{ justifyContent: 'space-between' }}>
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <Txt variant="heading" style={zoot ? { color: Zoot.text } : undefined}>
+                        {ch.title}
+                      </Txt>
+                      <Txt variant={overdue ? 'error' : 'small'} style={zoot ? { color: overdue ? Zoot.overdue : Zoot.muted } : undefined}>
+                        {overdue ? `${t.chores.overdue} · ` : ''}
+                        {t.chores.due(fmt.date(ch.next_due))}
+                      </Txt>
+                      {zoot ? <ZootTagline seed={ch.id} /> : null}
+                    </View>
+                    {zoot ? null : (
+                      <View>
+                        <Button title={t.chores.done} icon="checkmark" small onPress={() => choreM.complete.mutate(ch.id)} />
+                      </View>
+                    )}
+                  </Row>
+                  {zoot ? <Button title={t.chores.zoot.done} icon="leaf" small onPress={() => choreM.complete.mutate(ch.id)} /> : null}
+                </Card>
+              </FeatureScope>
             );
           })
         )}
@@ -136,7 +150,7 @@ export default function Home() {
                 <Row key={e.id} style={{ gap: 12 }}>
                   <View style={{ width: 46, borderRadius: 12, backgroundColor: fCal.bg, alignItems: 'center', paddingVertical: 6 }}>
                     <Txt style={{ color: fCal.fg, fontWeight: '700', fontSize: 18, lineHeight: 22 }}>{d.getDate()}</Txt>
-                    <Txt style={{ color: fCal.fg, fontSize: 11, lineHeight: 14 }}>{fmt.date(e.starts_at).split(' ')[1]}</Txt>
+                    <Txt style={{ color: fCal.fg, fontSize: 11, lineHeight: 14 }}>{fmt.monthShort(e.starts_at)}</Txt>
                   </View>
                   <View style={{ flex: 1 }}>
                     <Txt style={{ fontWeight: '600' }}>{e.title}</Txt>
