@@ -1,0 +1,6 @@
+Contact: https://github.com/B4ndi/heimvis/security/advisories/new
+Contact: mailto:security@heimvis.no
+Expires: 2027-11-26T00:00:00.000Z
+Preferred-Languages: nb, en
+Canonical: https://heimvis.no/.well-known/security.txt
+Policy: https://github.com/B4ndi/heimvis/blob/main/SECURITY.md
