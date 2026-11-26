@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { Button, Card, Chip, ErrorText, Input, Loading, Screen, Txt } from '@/components/ui';
 import { useChore, useChoreMutations } from '@/features/chores';
 import { t } from '@/i18n';
-import { todayIn } from '@/lib/dates';
+import { isoToInputDate, parseInputDate, todayIn } from '@/lib/dates';
 import { userMessage } from '@/lib/errors';
 import type { Chore, Recurrence } from '@/lib/types';
 import { useHousehold, useHouseholdId } from '@/providers/HouseholdProvider';
@@ -28,13 +28,14 @@ function Form({ existing }: { existing?: Chore }) {
   const [title, setTitle] = useState(existing?.title ?? '');
   const [recurrence, setRecurrence] = useState<Recurrence>(existing?.recurrence ?? 'weekly');
   const [rotation, setRotation] = useState<string[]>(existing?.rotation ?? active.map((a) => a.user_id));
-  const [due, setDue] = useState(existing?.next_due ?? todayIn(household?.households.timezone));
+  const [due, setDue] = useState(isoToInputDate(existing?.next_due ?? todayIn(household?.households.timezone)));
   const [error, setError] = useState<string | null>(null);
 
   async function submit() {
     setError(null);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(due)) return setError(t.calendar.invalidDate);
-    const input = { title, recurrence, rotation, next_due: due };
+    const nextDue = parseInputDate(due);
+    if (!nextDue) return setError(t.calendar.invalidDate);
+    const input = { title, recurrence, rotation, next_due: nextDue };
     try {
       if (existing) await m.update.mutateAsync({ id: existing.id, ...input });
       else await m.create.mutateAsync(input);

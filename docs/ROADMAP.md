@@ -23,7 +23,7 @@ These are hard or impossible to change later.
 | 1.5 | **Terms of use** | Content rules, account termination, liability | S |
 | 1.6 | **EAS setup**: `eas.json` profiles (dev/preview/prod), env per profile, update code signing, `runtimeVersion` policy | Signing must be in the first build | M |
 | 1.7 | **Universal links** on the domain (`associatedDomains`) | Invite links that can't be hijacked by other apps | S |
-| 1.8 | **App Store assets**: icon, screenshots, description (nb/en), privacy labels, age rating | Store listing | M |
+| 1.8 | **App Store assets**: icon, screenshots, description (nb/en), privacy labels, age rating (**declare drug references**: the "Zoot"/"Påfyll" chore easter egg shows a cannabis leaf and 420 jokes; mention it in the review notes so it isn't read as a hidden feature, guideline 2.3.1) | Store listing | M |
 | 1.9 | **TestFlight** round with real flatmates | Find bugs before review | — |
 
 Done: 1.1 (2026-11-25). Report reasons are a fixed list; admins see reports (not the reporter), except reports about themselves; support contact is `support@heimvis.no` in `src/constants/support.ts` (placeholder until the mailbox exists, see 1.3).

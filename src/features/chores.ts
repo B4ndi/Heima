@@ -20,6 +20,11 @@ export function useChores(hh: string) {
   });
 }
 
+/** Easter egg: "Zoot" / "Påfyll" (any case) get the 420 card. */
+export function isZootChore(title: string): boolean {
+  return /^\s*(zoot|påfyll)\s*$/i.test(title);
+}
+
 export function choreAssignee(c: Chore): string | null {
   return c.rotation.length ? c.rotation[c.rotation_index % c.rotation.length] : null;
 }

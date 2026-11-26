@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Button, Card, ErrorText, Input, Loading, Row, Screen, Toggle } from '@/components/ui';
 import { useEvent, useEventMutations } from '@/features/calendar';
 import { t } from '@/i18n';
-import { fmt, parseLocal } from '@/lib/dates';
+import { fmt, isoToInputDate, parseLocal } from '@/lib/dates';
 import { userMessage } from '@/lib/errors';
 import type { CalendarEvent } from '@/lib/types';
 import { useHouseholdId } from '@/providers/HouseholdProvider';
@@ -25,7 +25,7 @@ function Form({ existing, date }: { existing?: CalendarEvent; date?: string }) {
   const end = existing ? parseISO(existing.ends_at) : null;
 
   const [title, setTitle] = useState(existing?.title ?? '');
-  const [day, setDay] = useState(start ? fmt.isoDate(start) : (date ?? fmt.isoDate(new Date())));
+  const [day, setDay] = useState(start ? fmt.inputDate(start) : date ? isoToInputDate(date) : fmt.inputDate(new Date()));
   const [from, setFrom] = useState(start ? fmt.hhmm(start) : '18:00');
   const [to, setTo] = useState(end ? fmt.hhmm(end) : '20:00');
   const [allDay, setAllDay] = useState(existing?.all_day ?? false);
