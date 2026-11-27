@@ -9,11 +9,16 @@
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<header><a class="brand" href="/">Heimvis</a><nav><a href="/personvern/">Personvern</a><a href="/vilkar/">Vilkår</a><a href="/support/">Kontakt</a></nav></header>
-<main>
+<div class="wrap">
+<header class="site-header">
+  <a class="brand" href="/" aria-label="Heimvis, til forsiden"><svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" fill="#2A7F5F"/><path d="M10 19.5 20 11l10 8.5V30a1 1 0 0 1-1 1h-5.5v-6.5h-7V31H11a1 1 0 0 1-1-1Z" fill="#fff"/></svg>Heimvis</a>
+  <nav aria-label="Hovedmeny"><a href="/#funksjoner">Funksjoner</a><a href="/personvern/">Personvern</a><a href="/vilkar/">Vilkår</a><a class="cta" href="/support/">Kontakt</a></nav>
+</header>
+</div>
+<main class="wrap narrow page">
 <!-- UTKAST (ROADMAP 1.5). Bør leses over før lansering. -->
 <h1>Vilkår for bruk</h1>
-<p>Sist oppdatert: [dato]</p>
+<p class="meta">Sist oppdatert: [dato]</p>
 <h2>Tjenesten</h2>
 <p>Heimvis er en gratis app for å organisere en felles husstand. Tjenesten leveres av [navn / organisasjon] «som den er», og kan endres eller avvikles.</p>
 <h2>Konto</h2>
@@ -29,6 +34,11 @@
 <h2>Lovvalg</h2>
 <p>Norsk rett gjelder.</p>
 </main>
-<footer>© 2026 Heimvis · <a href="mailto:support@heimvis.no">support@heimvis.no</a> · <a href="/.well-known/security.txt">security.txt</a></footer>
+<footer>
+  <div class="wrap">
+    <span>© 2026 Heimvis</span>
+    <nav aria-label="Bunnmeny"><a href="/personvern/">Personvern</a><a href="/vilkar/">Vilkår</a><a href="/support/">Kontakt</a><a href="/.well-known/security.txt">security.txt</a></nav>
+  </div>
+</footer>
 </body>
 </html>
