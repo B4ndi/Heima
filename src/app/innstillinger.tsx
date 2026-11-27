@@ -18,6 +18,7 @@ import {
 } from '@/features/households';
 import { useBlocks, useModeration, useReports } from '@/features/moderation';
 import { t } from '@/i18n';
+import { inviteLink } from '@/lib/links';
 import { fmt } from '@/lib/dates';
 import type { Report } from '@/lib/types';
 import { userMessage } from '@/lib/errors';
@@ -67,7 +68,7 @@ export default function Settings() {
   }
 
   function share(code: string) {
-    const link = Linking.createURL(`bli-med/${code.replace('-', '')}`);
+    const link = inviteLink(code);
     Share.share({ message: t.settings.shareMessage(active?.households.name ?? '', code, link) });
   }
 

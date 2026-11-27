@@ -1,0 +1,3 @@
+# Invite links (https://heimvis.no/bli-med/CODE) open the app via universal links.
+# Without the app installed, show the fallback page (rewrite, not redirect).
+/bli-med/*  /bli-med/  200

@@ -32,7 +32,8 @@ What is in the repo is enforced automatically. The items below are settings on h
 ## App / EAS
 - [ ] `eas.json` profiles with `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_KEY` per environment (publishable key only)
 - [ ] EAS Update **code signing** (`npx expo-updates codesigning:generate`), private key kept outside the repo
-- [ ] Universal links / App Links: host `apple-app-site-association` and `assetlinks.json` on your domain (e.g. Cloudflare Pages) and add `associatedDomains` / `intentFilters` to `app.json`
+- [x] Universal links (iOS): `site/.well-known/apple-app-site-association` and `associatedDomains` in `app.json`
+- [ ] App Links (Android): `assetlinks.json` with the Play signing certificate fingerprint, and `intentFilters` in `app.json`
 - [ ] Fill in controller name and contact in `src/app/personvern.tsx`
 - [ ] App Store / Play privacy labels: e-mail (account), user content; no tracking
 

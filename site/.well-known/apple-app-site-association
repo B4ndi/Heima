@@ -1,0 +1,10 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["R5D4WU86F7.no.heimvis.app"],
+        "components": [{ "/": "/bli-med/*", "comment": "Household invite links open the app" }]
+      }
+    ]
+  }
+}

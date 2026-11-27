@@ -6,7 +6,7 @@ Goal: Heimvis in the App Store as soon as possible, at the lowest cost that keep
 
 These are hard or impossible to change later.
 
-- [x] **App name**: **Heimvis** (2026-11-25). "Heima" was taken by two household apps. Still to do: reserve the name by creating the app in App Store Connect, and search Patentstyret for "heimvis".
+- [x] **App name**: **Heimvis** (2026-11-25). "Heima" was taken by two household apps. Name reserved in App Store Connect (2026-11-27). Still to do: search Patentstyret for "heimvis".
 - [x] **Bundle ID**: `no.heimvis.app` (deep-link scheme `heimvis://`). Permanent once registered.
 - [x] **Apple account type**: **personal** (2026-11-27); the owner's name is shown as seller. Can be migrated to an organisation later.
 - [x] **Domain**: `heimvis.no`. Used for the email sender, the website, invite links (universal links) and `security.txt`.
@@ -22,9 +22,11 @@ These are hard or impossible to change later.
 | 1.4 | **Privacy policy completed**: controller, processors (Supabase, Resend, Expo, Sentry), transfer basis, age | GDPR art. 13 | S |
 | 1.5 | **Terms of use** | Content rules, account termination, liability | S |
 | 1.6 | **EAS setup**: `eas.json` profiles (dev/preview/prod), env per profile, update code signing, `runtimeVersion` policy | Signing must be in the first build | M |
-| 1.7 | **Universal links** on the domain (`associatedDomains`) | Invite links that can't be hijacked by other apps | S |
+| 1.7 | ✅ **Universal links** on the domain (`associatedDomains`) | Invite links that can't be hijacked by other apps | S |
 | 1.8 | **App Store assets**: icon, screenshots, description (nb/en), privacy labels, age rating (13+; the "Zoot"/"Påfyll" chore easter egg is a neutral cloud card with no drug references) | Store listing | M |
 | 1.9 | **TestFlight** round with real flatmates | Find bugs before review | — |
+
+Done: 1.7 (2026-11-27), iOS only: `associatedDomains` in `app.json`, the AASA file on heimvis.no (Team ID `R5D4WU86F7`), invites shared as `https://heimvis.no/bli-med/CODE` from store builds (Expo Go and web keep the dev URL), and a fallback page on the site. Android `assetlinks.json` waits for the Play signing certificate. Works from the first native build onwards.
 
 Done: 1.1 (2026-11-25). Report reasons are a fixed list; admins see reports (not the reporter), except reports about themselves; support contact is `support@heimvis.no` in `src/constants/support.ts` (placeholder until the mailbox exists, see 1.3).
 
