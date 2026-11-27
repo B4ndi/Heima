@@ -131,7 +131,7 @@ export default function Home() {
                       </View>
                     )}
                   </Row>
-                  {zoot ? <Button title={t.chores.zoot.done} icon="leaf" small onPress={() => choreM.complete.mutate(ch.id)} /> : null}
+                  {zoot ? <Button title={t.chores.zoot.done} icon="cloud" small onPress={() => choreM.complete.mutate(ch.id)} /> : null}
                 </Card>
               </FeatureScope>
             );

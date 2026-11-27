@@ -1,86 +1,99 @@
-import { View } from 'react-native';
-import Svg, { G, Path } from 'react-native-svg';
+import { useEffect, useState } from 'react';
+import { AccessibilityInfo, Animated, Easing, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
 import { Txt } from '@/components/ui';
 import { Zoot } from '@/constants/theme';
 import { t } from '@/i18n';
 
-// Easter egg for chores called "Zoot" or "Påfyll".
+// Easter egg for chores called "Zoot" or "Påfyll": a calm, cloudy card.
 
-/**
- * Seven-leaflet leaf: narrow, serrated leaflets fanning out from the stem.
- * Drawn in a 100x100 box with the stem joint at (50, 64).
- */
-const LEAFLETS = [
-  { angle: -100, len: 24 },
-  { angle: -66, len: 38 },
-  { angle: -33, len: 50 },
-  { angle: 0, len: 58 },
-  { angle: 33, len: 50 },
-  { angle: 66, len: 38 },
-  { angle: 100, len: 24 },
-];
+/** Soft cumulus cloud in a 100x60 box. */
+const CLOUD_PATH =
+  'M22,52 C10,52 4,44 4,36 C4,27 11,21 20,22 C21,12 30,6 40,7 C47,2 60,3 66,11 C76,8 87,15 87,25 ' +
+  'C94,27 98,33 97,40 C96,47 90,52 82,52 Z';
 
-/** One leaflet pointing up from (0,0): narrow at the base, widest past the middle, saw-toothed edges. */
-function leafletPath(len: number): string {
-  const w = len * 0.1; // half width at the widest point
-  const teeth = 10;
-  const right: string[] = [];
-  const left: string[] = [];
-  for (let k = 1; k < teeth; k++) {
-    const tt = k / teeth;
-    const y = -len * tt;
-    const half = w * Math.sin(Math.PI * Math.pow(tt, 1.25));
-    const tip = (y - len * 0.035).toFixed(2);
-    right.push(`L${(half * 1.3).toFixed(2)},${tip} L${half.toFixed(2)},${y.toFixed(2)}`);
-    left.unshift(`L${(-half).toFixed(2)},${y.toFixed(2)} L${(-half * 1.3).toFixed(2)},${tip}`);
-  }
-  return `M0,0 ${right.join(' ')} L0,${-len} ${left.join(' ')} Z`;
-}
-const LEAF_PATHS = LEAFLETS.map(({ angle, len }) => ({ angle, d: leafletPath(len) }));
-
-export function CannabisLeaf({ size, color }: { size: number; color: string }) {
+export function Cloud({ size, color }: { size: number; color: string }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 100 100" aria-hidden>
-      <G fill={color}>
-        {LEAF_PATHS.map(({ angle, d }) => (
-          <Path key={angle} d={d} transform={`translate(50 64) rotate(${angle})`} />
-        ))}
-        <Path d="M49.2,64 L50.8,64 L51.8,90 L48.2,90 Z" />
-      </G>
+    <Svg width={size} height={size * 0.6} viewBox="0 0 100 60" aria-hidden>
+      <Path d={CLOUD_PATH} fill={color} />
     </Svg>
   );
 }
 
-/** Leaves scattered in the background of the card. */
+function useReduceMotion(): boolean {
+  const [reduce, setReduce] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then((v) => alive && setReduce(v))
+      .catch(() => undefined);
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduce);
+    return () => {
+      alive = false;
+      sub.remove();
+    };
+  }, []);
+  return reduce;
+}
+
+/** One cloud that drifts slowly up and sideways and back, unless the user prefers reduced motion. */
+function DriftingCloud({ size, opacity, delay, style }: { size: number; opacity: number; delay: number; style: object }) {
+  const reduce = useReduceMotion();
+  const [drift] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduce) {
+      drift.setValue(0);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(drift, { toValue: 1, duration: 4200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(drift, { toValue: 0, duration: 4200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [reduce, delay, drift]);
+  return (
+    <Animated.View
+      aria-hidden
+      pointerEvents="none"
+      style={[
+        { position: 'absolute' },
+        style,
+        {
+          opacity: drift.interpolate({ inputRange: [0, 1], outputRange: [opacity, opacity * 0.6] }),
+          transform: [
+            { translateY: drift.interpolate({ inputRange: [0, 1], outputRange: [0, -6] }) },
+            { translateX: drift.interpolate({ inputRange: [0, 1], outputRange: [0, -4] }) },
+          ],
+        },
+      ]}>
+      <Cloud size={size} color={Zoot.cloud} />
+    </Animated.View>
+  );
+}
+
+/** Clouds drifting in the background of the card. */
 export function ZootBackdrop() {
   // kept inside the card horizontally: no sideways overflow at phone width
-  const leaves = [
-    { right: 12, bottom: 44, size: 76, rotate: 16, opacity: 0.6 },
-    { right: 96, bottom: -14, size: 48, rotate: -22, opacity: 0.35 },
-    { left: 8, bottom: -12, size: 40, rotate: 34, opacity: 0.3 },
+  const clouds = [
+    { size: 96, opacity: 0.7, delay: 0, style: { right: 10, bottom: 46 } },
+    { size: 64, opacity: 0.45, delay: 1400, style: { right: 92, bottom: -10 } },
+    { size: 52, opacity: 0.35, delay: 2600, style: { left: 6, bottom: -8 } },
   ];
   return (
     <>
-      {leaves.map(({ size, rotate, opacity, ...pos }, i) => (
-        <View
-          key={i}
-          aria-hidden
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            opacity,
-            transform: [{ rotate: `${rotate}deg` }],
-            ...pos,
-          }}>
-          <CannabisLeaf size={size} color={Zoot.leaf} />
-        </View>
+      {clouds.map((c, i) => (
+        <DriftingCloud key={i} {...c} />
       ))}
     </>
   );
 }
 
-/** "420" pill plus a laid-back line that stays the same for a given chore. */
+/** Cloud pill plus a calm line that stays the same for a given chore. */
 export function ZootTagline({ seed }: { seed: string }) {
   const lines = t.chores.zoot.taglines;
   const n = [...seed].reduce((a, ch) => a + ch.charCodeAt(0), 0);
@@ -94,7 +107,7 @@ export function ZootTagline({ seed }: { seed: string }) {
       }}>
       <View
         style={{
-          backgroundColor: Zoot.accent,
+          backgroundColor: Zoot.cloud,
           borderRadius: 999,
           paddingHorizontal: 10,
           paddingVertical: 3,

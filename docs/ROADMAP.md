@@ -10,7 +10,7 @@ These are hard or impossible to change later.
 - [x] **Bundle ID**: `no.heimvis.app` (deep-link scheme `heimvis://`). Permanent once registered.
 - [ ] **Apple account type**: personal (your name shown as seller) or organisation (needs an org. number and a D-U-N-S number, 1–2 weeks).
 - [x] **Domain**: `heimvis.no`. Used for the email sender, the website, invite links (universal links) and `security.txt`.
-- [ ] **Age limit**: 13+ (the GDPR consent age in Norway) or 16+.
+- [x] **Age limit**: **13+** (2026-11-27), the GDPR consent age in Norway.
 
 ## 1. Required before App Store submission
 
@@ -23,7 +23,7 @@ These are hard or impossible to change later.
 | 1.5 | **Terms of use** | Content rules, account termination, liability | S |
 | 1.6 | **EAS setup**: `eas.json` profiles (dev/preview/prod), env per profile, update code signing, `runtimeVersion` policy | Signing must be in the first build | M |
 | 1.7 | **Universal links** on the domain (`associatedDomains`) | Invite links that can't be hijacked by other apps | S |
-| 1.8 | **App Store assets**: icon, screenshots, description (nb/en), privacy labels, age rating (**declare drug references**: the "Zoot"/"Påfyll" chore easter egg shows a cannabis leaf and 420 jokes; mention it in the review notes so it isn't read as a hidden feature, guideline 2.3.1) | Store listing | M |
+| 1.8 | **App Store assets**: icon, screenshots, description (nb/en), privacy labels, age rating (13+; the "Zoot"/"Påfyll" chore easter egg is a neutral cloud card with no drug references) | Store listing | M |
 | 1.9 | **TestFlight** round with real flatmates | Find bugs before review | — |
 
 Done: 1.1 (2026-11-25). Report reasons are a fixed list; admins see reports (not the reporter), except reports about themselves; support contact is `support@heimvis.no` in `src/constants/support.ts` (placeholder until the mailbox exists, see 1.3).

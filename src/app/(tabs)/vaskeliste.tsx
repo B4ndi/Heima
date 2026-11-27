@@ -106,7 +106,7 @@ export default function Chores() {
 
               <Button
                 title={zoot ? t.chores.zoot.done : t.chores.done}
-                icon={zoot ? 'leaf' : 'checkmark'}
+                icon={zoot ? 'cloud' : 'checkmark'}
                 small
                 variant={mine || zoot ? 'primary' : 'secondary'}
                 onPress={() => m.complete.mutate(ch.id)}

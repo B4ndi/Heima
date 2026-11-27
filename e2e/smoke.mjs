@@ -180,17 +180,17 @@ try {
   check(true, 'Home summarises chores and events');
   await shot(bjorn, '07-home');
 
-  // --- Dates are DD.MM.YYYY; chores called "Zoot" get the 420 card (easter egg)
+  // --- Dates are DD.MM.YYYY; chores called "Zoot" get the cloud card (easter egg)
   await tab(anne, 'Vaskeliste');
   await anne.getByRole('button', { name: 'Ny oppgave', exact: true }).click();
   const due = await anne.getByLabel('Neste frist (DD.MM.ÅÅÅÅ)', { exact: true }).inputValue();
   check(/^\d{2}\.\d{2}\.\d{4}$/.test(due), `date fields use DD.MM.YYYY (${due})`);
   await anne.getByLabel('Oppgave', { exact: true }).fill('Zoot');
   await anne.getByRole('button', { name: 'Opprett', exact: true }).click();
-  await visible(anne.getByText('420')).waitFor({ timeout: 10000 });
+  await visible(anne.getByText('☁️', { exact: true })).waitFor({ timeout: 10000 });
   check(await anne.getByText(due).filter({ visible: true }).count(), 'chore due date shown as DD.MM.YYYY');
   await shot(anne, '07b-zoot');
-  check(true, 'Zoot chore gets the 420 card');
+  check(true, 'Zoot chore gets the cloud card');
 
   // --- Report and block (App Store guideline 1.2)
   const gone = async (page, text) => {

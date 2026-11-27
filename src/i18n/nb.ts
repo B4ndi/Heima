@@ -155,9 +155,9 @@ export const nb = {
     done: 'Ferdig',
     empty: 'Ingen oppgaver ennå.',
     zoot: {
-      badge: '420',
-      done: 'Puff, puff, ferdig 🌿',
-      taglines: ['Puff, puff, pass ✌️', 'Høy tid for påfyll 🌿', 'Ta det chill, mann 😌', 'Rull med det 🌀', 'Grønt lys, kompis 💚'],
+      badge: '☁️',
+      done: 'Ferdig, alt er rolig ☁️',
+      taglines: ['Ta det med ro ☁️', 'Pust ut 😌', 'I ditt eget tempo 🌀', 'Lett som en sky', 'Rolig og fint 💙'],
     },
     rec: { once: 'Én gang', daily: 'Daglig', weekly: 'Ukentlig', biweekly: 'Annenhver uke', monthly: 'Månedlig' },
   },

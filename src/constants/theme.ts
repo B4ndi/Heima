@@ -48,7 +48,7 @@ export const FeatureColors: Record<'light' | 'dark', Record<Feature, { fg: strin
     shopping: { fg: '#C2570C', bg: '#FDF0E6', onFg: '#FFFFFF' },
     calendar: { fg: '#C23A6B', bg: '#FCEAF1', onFg: '#FFFFFF' },
     chores: { fg: '#0E7C86', bg: '#E3F4F5', onFg: '#FFFFFF' },
-    zoot: { fg: '#A6E35A', bg: '#2C4C1D', onFg: '#10210A' },
+    zoot: { fg: '#A9C4FF', bg: '#2C3552', onFg: '#111A33' },
   },
   dark: {
     home: { fg: '#6FD0A6', bg: '#1C2B25', onFg: '#0B1F16' },
@@ -57,17 +57,17 @@ export const FeatureColors: Record<'light' | 'dark', Record<Feature, { fg: strin
     shopping: { fg: '#F5A86B', bg: '#2E2218', onFg: '#2A1505' },
     calendar: { fg: '#F29BBB', bg: '#2E1B23', onFg: '#2A0B17' },
     chores: { fg: '#6CCFD8', bg: '#16292B', onFg: '#05201F' },
-    zoot: { fg: '#A6E35A', bg: '#2C4C1D', onFg: '#10210A' },
+    zoot: { fg: '#A9C4FF', bg: '#2C3552', onFg: '#111A33' },
   },
 };
 
-/** Easter egg: chores called "Zoot" or "Påfyll" get a dark green 420 card (same in light and dark mode). */
+/** Easter egg: chores called "Zoot" or "Påfyll" get a dusky, cloudy card (same in light and dark mode). */
 export const Zoot = {
-  card: '#1D3512',
-  text: '#EAFBD7',
-  muted: '#B9D99A',
-  accent: '#A6E35A',
-  leaf: '#4E8A2A',
+  card: '#232B45',
+  text: '#EEF1FB',
+  muted: '#B7BFDB',
+  accent: '#A9C4FF',
+  cloud: '#56628A',
   overdue: '#FFB4A9',
 } as const;
 
