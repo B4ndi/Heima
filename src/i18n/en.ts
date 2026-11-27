@@ -157,9 +157,9 @@ export const en: Strings = {
     done: 'Done',
     empty: 'No chores yet.',
     zoot: {
-      badge: '420',
-      done: 'Puff, puff, done 🌿',
-      taglines: ['Puff, puff, pass ✌️', 'High time for a refill 🌿', 'Stay chill, man 😌', 'Roll with it 🌀', 'Green light, buddy 💚'],
+      badge: '☁️',
+      done: 'Done, all calm ☁️',
+      taglines: ['Take it easy ☁️', 'Breathe out 😌', 'At your own pace 🌀', 'Light as a cloud', 'Nice and calm 💙'],
     },
     rec: { once: 'Once', daily: 'Daily', weekly: 'Weekly', biweekly: 'Every other week', monthly: 'Monthly' },
   },

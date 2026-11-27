@@ -20,7 +20,7 @@ export function useChores(hh: string) {
   });
 }
 
-/** Easter egg: "Zoot" / "Påfyll" (any case) get the 420 card. */
+/** Easter egg: "Zoot" / "Påfyll" (any case) get the cloud card. */
 export function isZootChore(title: string): boolean {
   return /^\s*(zoot|påfyll)\s*$/i.test(title);
 }
