@@ -3,6 +3,8 @@
 Static website (no build step, no JavaScript) served by **Cloudflare Pages**.
 
 Pages: home, `/personvern/` (privacy), `/vilkar/` (terms), `/support/`, `/.well-known/security.txt`.
+
+Universal links: `/.well-known/apple-app-site-association` (served as `application/json` by `_headers`) lets the iOS app open `https://heimvis.no/bli-med/CODE`. Without the app, `_redirects` rewrites those URLs to the fallback page `/bli-med/` (noindex, not cached). The AASA must be served from the apex without redirects.
 Security headers are in `_headers` (strict CSP, HSTS, no framing).
 
 ## Setup (once)
@@ -21,4 +23,4 @@ Security headers are in `_headers` (strict CSP, HSTS, no framing).
 - Fill in the `[...]` placeholders in `personvern/` and `vilkar/` (ROADMAP 1.4, 1.5). Keep the privacy text in sync with `src/app/personvern.tsx`.
 - Make `support@heimvis.no` and `security@heimvis.no` real mailboxes.
 - Renew `Expires` in `security.txt` before it lapses.
-- Universal links (ROADMAP 1.7): add `.well-known/apple-app-site-association` (needs the Apple Team ID) and `assetlinks.json`, plus a `_headers` rule serving the AASA as `application/json`.
+- Android App Links: add `.well-known/assetlinks.json` (needs the Play signing certificate fingerprint).

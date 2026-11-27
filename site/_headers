@@ -8,3 +8,10 @@
 
 /.well-known/security.txt
   Content-Type: text/plain; charset=utf-8
+
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+
+/bli-med/*
+  X-Robots-Tag: noindex
+  Cache-Control: no-store
